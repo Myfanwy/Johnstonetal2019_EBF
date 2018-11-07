@@ -7,6 +7,7 @@ library(ybp)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
+library(cfs.misc)
 # detection windows for each year
 
 

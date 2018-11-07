@@ -21,5 +21,10 @@ d <- all69khz_grouped %>%
     TRUE ~ 2017)) %>% 
   select(-Frequency)
 
-wst <- filter(d, Sp == "wst")
-wst <- fishtrackr::fishpaths(wst, wst$TagID, wst$Station)
+wst <- d %>% 
+  filter(Sp == "wst") %>% 
+  arrange(TagID, DateTimeUTC) 
+
+#wst <- fishtrackr::fishpaths(wst, wst$TagID, wst$Station)
+
+exitstations = c("BC_joint", "BC_joint2", "Base_TD")

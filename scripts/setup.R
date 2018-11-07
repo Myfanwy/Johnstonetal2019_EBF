@@ -22,6 +22,7 @@ d <- all69khz_grouped %>%
     TRUE ~ 2017)) %>% 
   select(-Frequency)
 
+# wst detections
 wst <- d %>% 
   filter(Sp == "wst") %>% 
   arrange(TagID, DateTimeUTC) 

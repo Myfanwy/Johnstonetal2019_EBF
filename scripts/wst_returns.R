@@ -1,7 +1,7 @@
 source("scripts/setup.R")
 # white sturgeon:
 
-# add detection year
+# add detection year to the white sturgeon detection df
 wst <- wst %>% 
   mutate(tag_detyear = case_when(lubridate::year(DateTagged) == 2012 ~ 2011,
                                  TRUE ~ 2013))
@@ -36,14 +36,12 @@ outyears = rbind(wst1206_outyears, wst1825days)
 wst_exits = anti_join(wst_exits, outyears)
 wst_exits = full_join(wst_exits, wsttable, by ="TagID") # add detyear back in
 
-# filter to only the years greater than or equal to a fish's tag year
+# filter to only the years greater than or equal to a fish's tag year, arrange, and add return status column
 wst_exits <- wst_exits %>% 
   group_by(TagID) %>% 
   filter(Detyear >= tag_detyear) %>% 
-  ungroup()
-
-wst_exits = arrange(wst_exits, TagID, Detyear)
-wst_exits$return_status = NA # this is the final dataframe to be filled in with each fish's exit status in each year.
+  ungroup() %>% 
+  arrange(TagID, Detyear) 
 
 #--------------------------------------------#
 
@@ -57,8 +55,13 @@ wst_paths <- wst_paths %>%
   arrange(TagID, DateTimeUTC) %>% 
   select(TagID, DateTimeUTC, Station, Detyear, DateTagged)
 
-filter(wst_paths, TagID == 2842) # iterated through each tagID and verified that final detection was at BC_joint or Base_TD; if so, 1, if not, 0.
+filter(wst_paths, TagID == 2841) # iterated through each tagID and verified that final detection was at BC_joint or Base_TD; if so, 1, if not, 0. Saved in wst_returns_handchecked.xlsx
 
 #--------------------------------------------#
 wst_returns_handchecked <- readxl::read_excel("data/wst_returns_handchecked.xlsx", na = "NA")
-wst_returns_handchecked
+
+wst_returns_hc_tidy <- tidyr::gather(wst_returns_handchecked, key = "Detyear", value = "return_status", -TagID) %>% 
+  mutate(Detyear = as.integer(Detyear))
+
+wst_exits_final <- left_join(wst_exits, wst_returns_hc_tidy) %>% filter(!is.na(return_status))
+saveRDS(wst_exits_final, "data/wst_exits_final.rds")

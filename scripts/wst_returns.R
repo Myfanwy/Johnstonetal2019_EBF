@@ -3,14 +3,14 @@ source("scripts/setup.R")
 
 # add detection year to the white sturgeon detection df
 wst <- wst %>% 
-  mutate(tag_detyear = case_when(lubridate::year(DateTagged) == 2012 ~ 2011,
+  mutate(TagDetyear = case_when(lubridate::year(DateTagged) == 2012 ~ 2011,
                                  TRUE ~ 2013))
 len(wst$TagID) # 92 detected white sturgeon
 
 # wst tagids:
 wsttable = alltags %>% 
   filter(Sp == "wst") %>% select(TagID) %>% # 92 tagged white sturgeon; all fish tagged were detected
-  left_join(select(filter(wst, !duplicated(TagID)), TagID, tag_detyear)) 
+  left_join(select(filter(wst, !duplicated(TagID)), TagID, TagDetyear)) 
 
 # make exit status dataframe to be filled in
 wsttags = alltags %>% filter(Sp == "wst") %>% pull(TagID)
@@ -24,7 +24,7 @@ wst1206_outyears = filter(wst_exits, TagID %in% wst1206, Detyear >= 2013)
 
 # subest years that the 5-year tags from 2011 can't return in
 wst1825days <- wst %>% 
-  filter(tag_detyear == 2011, !(TagID %in% wst1206)) %>% 
+  filter(TagDetyear == 2011, !(TagID %in% wst1206)) %>% 
   filter(!duplicated(TagID)) %>% 
   pull(TagID)
 wst1825_outyears = filter(wst_exits, TagID %in% wst1825days, Detyear < 2014 )
@@ -39,7 +39,7 @@ wst_exits = full_join(wst_exits, wsttable, by ="TagID") # add detyear back in
 # filter to only the years greater than or equal to a fish's tag year, arrange, and add return status column
 wst_exits <- wst_exits %>% 
   group_by(TagID) %>% 
-  filter(Detyear >= tag_detyear) %>% 
+  filter(Detyear >= TagDetyear) %>% 
   ungroup() %>% 
   arrange(TagID, Detyear) 
 
@@ -60,8 +60,12 @@ filter(wst_paths, TagID == 2841) # iterated through each tagID and verified that
 #--------------------------------------------#
 wst_returns_handchecked <- readxl::read_excel("data/wst_returns_handchecked.xlsx", na = "NA")
 
-wst_returns_hc_tidy <- tidyr::gather(wst_returns_handchecked, key = "Detyear", value = "return_status", -TagID) %>% 
+wst_returns_hc_tidy <- tidyr::gather(wst_returns_handchecked, key = "Detyear", value = "ExitStatus", -TagID) %>% 
   mutate(Detyear = as.integer(Detyear))
 
-wst_exits_final <- left_join(wst_exits, wst_returns_hc_tidy) %>% filter(!is.na(return_status))
+wst_exits_final <- left_join(wst_exits, wst_returns_hc_tidy) %>% 
+  filter(!is.na(ExitStatus)) %>% 
+  mutate(Species = "wst") %>% 
+  select(TagID, Species, Detyear, TagDetyear, ExitStatus)
+
 saveRDS(wst_exits_final, "data/wst_exits_final.rds")

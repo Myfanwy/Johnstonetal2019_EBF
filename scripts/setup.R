@@ -30,3 +30,8 @@ wst <- d %>%
 #wst <- fishtrackr::fishpaths(wst, wst$TagID, wst$Station)
 
 exitstations = c("BC_joint", "BC_joint2", "Base_TD")
+
+# chn detections
+chn <- d %>% 
+  filter(Sp == "chn") %>% 
+  arrange(TagID, DateTimeUTC) 

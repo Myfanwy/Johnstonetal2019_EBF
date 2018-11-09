@@ -32,3 +32,18 @@ alltags %>%
             nfemales = sum(Sex == "F"),
             nunk = sum(Sex == "U")
             ) 
+
+source("scripts/functions/FirstLast.R")
+
+chn_rs <- fishpaths(chn, chn$TagID, chn$Station)
+
+chn_rs <- chn_rs %>% 
+  group_by(TagID) %>% 
+  arrange(arrival) %>% 
+  mutate(firstarr = min(arrival),
+         lastdep = max(departure),
+         residence = as.numeric(as.duration(interval(start = firstarr, end = lastdep)), "days"))  %>% 
+  ungroup() %>% 
+  arrange(TagID, arrival)
+
+summary(chn_rs)

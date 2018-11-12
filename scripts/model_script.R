@@ -15,7 +15,8 @@ exits$Nfish_total = ifelse(exits$Species == "chn", 215, 229)
 
 #-------------------------------------------------------#
 # Basic binomial model: treats each fish as iid
-dlist = list(Nfish_total = exits$Nfish_total, ExitStatus = exits$ExitStatus, Bchn = exits$Bchn)
+dlist = list(Nfish_total = exits$Nfish_total, ExitStatus = exits$ExitStatus, Bchn = exits$Bchn,
+             TagID = coerce_index(exits$TagID), Detyear = coerce_index(exits$Detyear))
 
 m1 <- rethinking::map(
   alist(
@@ -44,14 +45,25 @@ quantile(diff.exit, c(0.025, 0.5, 0.975))  # means that the median estimate of e
 dens(diff.esc)
 
 #-------------------------------------------------------#
-# plotting raw data
 
-library(ggplot2)
-library(dplyr)
+# Random effects model: TagID and Year
 
-exits %>% 
-  group_by(Species) %>% 
-  summarise(propexits = sum(ExitStatus)/unique(Nfish_total)) %>% 
-  ggplot() +
-  geom_bar(aes(x = Species, y = propexits, fill = Species), stat = "identity") +
-  coord_flip() 
+m2 <- map2stan(
+  alist(
+    #likelihood
+    ExitStatus ~ dbinom( 1, p ),
+    # linear model
+    logit(p) <- a + bChn*Bchn + b_fish[TagID] + b_detyear[Detyear],
+    # adaptive priors
+    b_fish[TagID] ~ dnorm(0,sigma_fish),
+    b_detyear[Detyear] ~ dnorm(0, sigma_detyear),
+    # fixed priors
+    a ~ dnorm(0, 1),
+    bChn ~ dnorm(0, 10),
+    sigma_fish ~ dcauchy(0,1),
+    sigma_detyear ~ dcauchy(0,1)
+  ),
+  data = dlist, warmup=2000 , iter=1e4 , cores=2 , chains = 2)
+
+precis(m2, prob = 0.95)
+

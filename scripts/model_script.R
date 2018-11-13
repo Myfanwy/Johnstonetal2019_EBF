@@ -59,12 +59,19 @@ m2 <- map2stan(
     b_detyear[Detyear] ~ dnorm(0, sigma_detyear),
     # fixed priors
     a ~ dnorm(0, 1),
-    bChn ~ dnorm(0, 10),
-    sigma_fish ~ dnorm(5, 2),
-    sigma_detyear ~ dexp(1)
+    bChn ~ dnorm(0, 2),
+    sigma_fish ~ dexp(0.25),
+    sigma_detyear ~ dnorm(0,1)
   ),
-  data = dlist, warmup=2000 , iter=1e5 , cores=2 , chains = 1)
+  data = dlist, warmup=200 , iter=400 , cores=1 , chains = 4)
 
 precis(m2, prob = 0.95)
 plot(precis(m2, pars = c("bChn", "b_detyear", "sigma_fish", "sigma_detyear"), depth = 2))
 logistic(-2.61)
+
+#-------------------------------------------------------#
+library(rstanarm)
+
+m3 = stan_glmer(ExitStatus ~ Bchn + (1|TagID) + (1|Detyear),
+                data = exits, family = "binomial", adapt_delta=0.95,
+                prior = hs())

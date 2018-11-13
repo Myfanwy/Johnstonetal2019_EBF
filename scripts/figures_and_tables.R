@@ -20,8 +20,7 @@ fca_tags %>%
             nunk = sum(Sex == "U")
             ) 
 
-alltags %>% 
-  filter(Sp == "wst") %>% 
+wst_tags %>% 
   group_by(TagGroup) %>% 
   summarise(nfish = len(TagID),
             fl_low = min(FL),
@@ -32,3 +31,11 @@ alltags %>%
             nfemales = sum(Sex == "F"),
             nunk = sum(Sex == "U")
             ) 
+
+# number of returning fish per year
+
+wst_exits <- readRDS("data/wst_exits_final.rds")
+wst_exits %>% 
+  group_by(Detyear) %>% 
+  summarise(nreturn = len(TagID),
+            nexits = sum(ExitStatus))

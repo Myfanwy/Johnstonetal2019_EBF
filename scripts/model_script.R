@@ -1,8 +1,6 @@
 #-------------------------------------------------------#
 # model script
 
-library(rethinking)
-
 wst_exits <- readRDS("data/wst_exits_final.rds")
 chn_exits <- readRDS("data/chn_exits_final.rds")
 
@@ -71,7 +69,12 @@ logistic(-2.61)
 
 #-------------------------------------------------------#
 library(rstanarm)
-
+options(digits = 3)
 m3 = stan_glmer(ExitStatus ~ Bchn + (1|TagID) + (1|Detyear),
-                data = exits, family = "binomial", adapt_delta=0.95,
+                data = exits, family = "binomial", adapt_delta=0.99,
                 prior = hs())
+
+print(m3, pars = )
+shinystan::launch_shinystan(m3)
+
+round(posterior_interval(m3, prob = 0.5), 2)

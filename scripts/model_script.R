@@ -1,6 +1,7 @@
 #-------------------------------------------------------#
 # model script
-
+library(rstanarm)
+options(digits = 3)
 wst_exits <- readRDS("data/wst_exits_final.rds")
 chn_exits <- readRDS("data/chn_exits_final.rds")
 
@@ -12,69 +13,61 @@ exits$Nfish_total = ifelse(exits$Species == "chn", 215, 229)
 
 
 #-------------------------------------------------------#
-# Basic binomial model: treats each fish as iid
+
 dlist = list(Nfish_total = exits$Nfish_total, ExitStatus = exits$ExitStatus, Bchn = exits$Bchn,
              TagID = coerce_index(exits$TagID), Detyear = coerce_index(exits$Detyear))
 
-m1 <- rethinking::map(
-  alist(
-    ExitStatus ~ dbinom(1, p),
-    logit(p) <- a + bChn*Bchn,
-    a ~ dnorm(0,10),
-    bChn ~ dnorm(0, 10)
-  ),
-  data = dlist)
-
-precis(m1, prob = 0.95)
-plot(precis(m1))
-
-post <- extract.samples(m1)
-p.exit.salmon <- logistic(post$a + post$bChn)
-p.exit.wst <- logistic(post$a)
-
-plot(NULL, xlim = c(0, 1), ylim = c(0, 35))
-dens(p.exit.salmon, col = "red", add = TRUE)
-dens(p.exit.wst, col = "darkblue", add = TRUE)
-abline(v=0, lty = 2, add = TRUE)
-
-diff.exit <- p.exit.wst - p.exit.salmon
-
-quantile(diff.exit, c(0.025, 0.5, 0.975))  # means that the median estimate of exit for salmon is about 32% that of a sturgeon, with a 95% CI of between 25 % and 39%.
-dens(diff.esc)
 
 #-------------------------------------------------------#
 
-# Random effects model: TagID and Year
-
-m2 <- map2stan(
-  alist(
-    #likelihood
-    ExitStatus ~ dbinom( 1, p ),
-    # linear model
-    logit(p) <- a + bChn*Bchn + b_fish[TagID] + b_detyear[Detyear],
-    # adaptive priors
-    b_fish[TagID] ~ dnorm(0,sigma_fish),
-    b_detyear[Detyear] ~ dnorm(0, sigma_detyear),
-    # fixed priors
-    a ~ dnorm(0, 1),
-    bChn ~ dnorm(0, 2),
-    sigma_fish ~ dexp(0.25),
-    sigma_detyear ~ dnorm(0,1)
-  ),
-  data = dlist, warmup=200 , iter=400 , cores=1 , chains = 4)
-
-precis(m2, prob = 0.95)
-plot(precis(m2, pars = c("bChn", "b_detyear", "sigma_fish", "sigma_detyear"), depth = 2))
-logistic(-2.61)
-
-#-------------------------------------------------------#
-library(rstanarm)
-options(digits = 3)
-m3 = stan_glmer(ExitStatus ~ Bchn + (1|TagID) + (1|Detyear),
+m2 = stan_glmer(ExitStatus ~ Bchn + (1|Detyear),
                 data = exits, family = "binomial", adapt_delta=0.99,
                 prior = hs())
 
-print(m3, pars = )
-shinystan::launch_shinystan(m3)
+summary(m2, pars = c("alpha", "Bchn", "Sigma[Detyear:(Intercept),(Intercept)]"), 
+        digits = 2, probs = c(0.0275, 0.50, 0.975))
 
-round(posterior_interval(m3, prob = 0.5), 2)
+print(m2, digits = 3)
+save(m2, file = "stan_models/model_script_results_m2.rda")
+prior_summary(m2)
+
+# convert estimates to probability scale
+options(digits = 2)
+logistic(c(3.35, 2.56, 4.34)) # intercept median and se, lower and upper ci
+logistic(c(-2.75, -3.65, -1.96)) # b_chn median and se, lower and upper ci
+logistic(c(0.27, 0.02, 1.79)) # sigma detyear median, lower and upper ci
+
+# median probability of a chn exiting
+logistic(3.35 -2.77)
+# lower ci
+logistic(3.35 - 3.65)
+# upper ci
+logistic(3.35 -1.96)
+
+# difference in prob of exiting between species
+post <- as.data.frame(m2)
+p.exit.wst <- logistic(post$`(Intercept)`)
+p.exit.chn <- logistic(post$`(Intercept)` + post$Bchn)
+diff.exit = p.exit.wst - p.exit.chn
+quantile(diff.exit)
+
+#--------------------------------------------#
+# plot
+library(ggplot2)
+plot(m2)
+#--------------------------------------------#
+post <- as.data.frame(m2)
+str(post)
+
+rethinking::dens(post$`(Intercept)`)
+rethinking::dens(post$`(Intercept)` + post$Bchn, add = TRUE)
+names(post) <- c("alpha", "Bchn", "2011","2012", "2013", "2014", "2015", "2016", "2017", "Sigma_detyear")
+post$Chn <- logistic(post$alpha + post$Bchn)
+post$alpha_p <- logistic(post$alpha)
+post <- post[ , c("alpha_p", "Chn")]
+post2 <- tidyr::gather(post, key = "parameter", value = "value")
+head(post2)
+
+ggplot(post2) +
+  geom_density(aes(x = value, fill = parameter, group = parameter)) +
+  theme_minimal()

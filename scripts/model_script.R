@@ -52,7 +52,7 @@ prior_summary(m2)
 
 #--------------------------------------------#
 # working with estimates
-
+source("scripts/setup.R")
 # convert estimates to probability scale
 logistic(c(3.38, 2.56, 4.34)) # intercept median and se, lower and upper ci
 logistic(c(-2.51, -3.40, -1.74)) # b_chn median and se, lower and upper ci
@@ -86,5 +86,17 @@ post2 <- tidyr::gather(post, key = "parameter", value = "value")
 head(post2)
 
 ggplot(post2) +
-  geom_density(aes(x = value, fill = parameter, group = parameter)) +
-  theme_minimal()
+  geom_density(aes(x = value, fill = parameter, group = parameter), alpha = 0.7) +
+  labs(x = "Posterior probability of exiting Yolo Bypass", y = "Density") +
+  scale_fill_manual(values = c("alpha_p" = "darkblue", "Chn" = "limegreen"), 
+                    labels = c("White sturgeon     ", "fall-run Chinook Salmon          ")) +
+  theme_minimal() +
+  theme(text = element_text(size = 14),
+        axis.text = element_text(size = 14),
+    legend.position = c(0.2, 0.75),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.spacing = unit(14, "points")) +
+  guides(fill = guide_legend(title = "Species",
+                             keywidth = 0.5, keyheight = 0.5, default.unit = "inch",
+                             stroke = 1))

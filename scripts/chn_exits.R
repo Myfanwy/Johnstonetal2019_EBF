@@ -1,16 +1,8 @@
 #--------------------------------------------#
 #  chn
-
 source("scripts/setup.R")
 
-chn %>% 
-  group_by(TagID) %>% 
-  summarise(ndups = length(duplicated(DateTimeUTC)))
-
 fl <- FirstLast(chn)
-
-filter(fl, TagID == 20152)
-
 chnidx <- select(chn, TagID, TagGroup) %>% 
   filter(!duplicated(TagID))
 
@@ -20,7 +12,7 @@ vet(fl)
 fl <- fl %>% 
   filter(TagGroup != "fca_2012") %>%  #filter out 2012 fish; not included in analyses
   group_by(TagID) %>% 
-  mutate(ExitStatus = case_when(LastStation %in% exitstations ~ 1 ,
+  mutate(ExitStatus = case_when(LastStation %in% exitstations ~ 1 , 
                             TRUE ~ 0)) %>% 
   ungroup() %>% 
   mutate(Detyear = 
@@ -57,7 +49,6 @@ bypass
 
 bard <- readRDS("data/BARD_query_fcatags.rds") # query that Matt Pagel ran on 8/30/2018
 head(bard)
-
 ne <- filter(fl, ExitStatus == 0) # no-exit
 
 bard <- filter(bard, TagID %in% ne$TagID)
@@ -67,15 +58,23 @@ bard <- bard %>%
   group_by(TagID) %>% 
   filter(!duplicated(DetectDate)) %>% 
   ungroup() %>% 
-  rename(DateTimePST = DetectDate, Rkm = RiverKm)
+  rename(DateTimeUTC = DetectDate, Rkm = RiverKm)
+
+bardp <- fishpaths(bard, bard$TagID, bard$Station)
 
 bardfl <- FirstLast(bard)
 bardfl <- filter(bardfl, !(LastStation %in% bypass), !(LastStation %in% cacheslough))
 bardfl # 2 fish; check on their last detections
 
-chn <- fishpaths(chn, chn$TagID, chn$Station)
-ne_paths <- filter(chn, TagID %in% c(31567, 37845)) %>% 
-  arrange(TagID, DateTimePST)
-View(ne_paths) # the riovista detection happened in the middle of its path; for the other fish, made it all the way to the Feather before turning around and heading BACK up the bypass; final detection at Knaggs in December
+chnp <- fishpaths(chn, chn$TagID, chn$Station)
 
-# chn_exits_final ready to model
+ne_paths <- filter(chnp, TagID %in% c(31567, 37845)) %>% 
+  arrange(TagID, DateTimePST)
+View(ne_paths) #
+
+bardp %>% 
+  filter(TagID %in% c(31567, 37845)) %>% 
+  arrange(TagID, DateTimePST) %>% 
+  View()
+
+#  the riovista detection happened in the middle of its path; for the other fish, made it all the way to the Feather before turning around and heading BACK up the bypass; final detection at Knaggs in December; chn_exits_final ready to model.

@@ -1,7 +1,12 @@
 #-------------------------------------------------------#
 # model script
 library(rstanarm)
-options(digits = 3)
+library(ggplot2)
+options(digits = 2)
+
+#--------------------------------------------#
+# data
+
 wst_exits <- readRDS("data/wst_exits_final.rds")
 chn_exits <- readRDS("data/chn_exits_final.rds")
 
@@ -9,40 +14,55 @@ exits = rbind(wst_exits, chn_exits)
 exits
 sum(duplicated(exits$TagID[exits$Species=="wst"])) # many white sturgeon were returners in any given year
 exits$Bchn <- ifelse(exits$Species == "chn", 1, 0)
-exits$Nfish_total = ifelse(exits$Species == "chn", 215, 229)
+exits$Nfish_total = ifelse(exits$Species == "chn", 215, 229) # 215 chinook obs, 229 wst (92 ind fish)
 
+#--------------------------------------------#
+# First Model - random effects on TagID and Detyear
 
-#-------------------------------------------------------#
-
-dlist = list(Nfish_total = exits$Nfish_total, ExitStatus = exits$ExitStatus, Bchn = exits$Bchn,
-             TagID = coerce_index(exits$TagID), Detyear = coerce_index(exits$Detyear))
-
-
-#-------------------------------------------------------#
-
-m2 = stan_glmer(ExitStatus ~ Bchn + (1|Detyear),
+if(!file.exists("stan_models/model_script_results.rda")) { 
+  
+  m1 = stan_glmer(ExitStatus ~ Bchn + (1|TagID) + (1|Detyear),
                 data = exits, family = "binomial", adapt_delta=0.99,
                 prior = hs())
+    save(m1, file = "stan_models/model_script_results.rda")
+  } else {
+    load(file = "stan_models/model_script_results.rda")
+  }
+
+summary(m1, pars = c("alpha", "Bchn", "Sigma[Detyear:(Intercept),(Intercept)]", "Sigma[TagID:(Intercept),(Intercept)]"), 
+        digits = 2, probs = c(0.0275, 0.50, 0.975)) # variance on TagID includes 0
+
+#---------------------------------------------#
+# Final Model: random effects on detection year only
+
+if(!file.exists("stan_models/model_script_results_m2.rda")) {
+
+    m2 = stan_glmer(ExitStatus ~ Bchn + (1|Detyear),
+                data = exits, family = "binomial", adapt_delta=0.99,
+                prior = hs())
+    save(m2, file = "stan_models/model_script_results_m2.rda")
+    
+} else {
+  load("stan_models/model_script_results_m2.rda")
+}
 
 summary(m2, pars = c("alpha", "Bchn", "Sigma[Detyear:(Intercept),(Intercept)]"), 
         digits = 2, probs = c(0.0275, 0.50, 0.975))
-
-print(m2, digits = 3)
-save(m2, file = "stan_models/model_script_results_m2.rda")
 prior_summary(m2)
 
+#--------------------------------------------#
+# working with estimates
+
 # convert estimates to probability scale
-options(digits = 2)
-logistic(c(3.35, 2.56, 4.34)) # intercept median and se, lower and upper ci
-logistic(c(-2.75, -3.65, -1.96)) # b_chn median and se, lower and upper ci
-logistic(c(0.27, 0.02, 1.79)) # sigma detyear median, lower and upper ci
+logistic(c(3.38, 2.56, 4.34)) # intercept median and se, lower and upper ci
+logistic(c(-2.51, -3.40, -1.74)) # b_chn median and se, lower and upper ci
 
 # median probability of a chn exiting
-logistic(3.35 -2.77)
+logistic(3.38 -2.51)
 # lower ci
-logistic(3.35 - 3.65)
+logistic(3.38 - 3.40)
 # upper ci
-logistic(3.35 -1.96)
+logistic(3.35 -1.74)
 
 # difference in prob of exiting between species
 post <- as.data.frame(m2)
@@ -52,15 +72,12 @@ diff.exit = p.exit.wst - p.exit.chn
 quantile(diff.exit)
 
 #--------------------------------------------#
-# plot
-library(ggplot2)
-plot(m2)
 #--------------------------------------------#
-post <- as.data.frame(m2)
+# work with posterior distribution
+
+post <- as.data.frame(m2) # posterior probability; 4000 samples for each par
 str(post)
 
-rethinking::dens(post$`(Intercept)`)
-rethinking::dens(post$`(Intercept)` + post$Bchn, add = TRUE)
 names(post) <- c("alpha", "Bchn", "2011","2012", "2013", "2014", "2015", "2016", "2017", "Sigma_detyear")
 post$Chn <- logistic(post$alpha + post$Bchn)
 post$alpha_p <- logistic(post$alpha)

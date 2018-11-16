@@ -7,6 +7,7 @@ options(digits = 4)
 
 
 fca_tags %>% 
+  filter(!(TagID %in% c(31570, 13720 ,13723))) %>% # late-fall fish; exclude
   left_join(., select(alltags, TagID, TagGroup), by = "TagID") %>% 
   filter(TagGroup != "fca_2012") %>% 
   group_by(TagGroup) %>% 
@@ -56,4 +57,16 @@ wst_exits %>%
   summarise(nreturn = len(TagID),
             nexits = sum(ExitStatus))
 
+# number of fish detected at Putah Creek Spawning
 
+chn %>% 
+  filter(Station == "PutahCrk_spawn") %>% 
+  summarise(nfish = len(TagID),
+            mindate = min(DateTimePST),
+            maxdate = max(DateTimePST))
+
+# number of chn exits by year
+chn_exits_final %>% 
+  group_by(Detyear, ExitStatus) %>% 
+  tally() %>% 
+  filter(ExitStatus == 1)

@@ -2,6 +2,7 @@
 # model script
 library(rstanarm)
 library(ggplot2)
+library(bayesplot)
 options(digits = 2)
 
 #--------------------------------------------#
@@ -48,14 +49,22 @@ if(!file.exists("stan_models/model_script_results_m2.rda")) {
 
 summary(m2, pars = c("alpha", "Bchn", "Sigma[Detyear:(Intercept),(Intercept)]"), 
         digits = 2, probs = c(0.0275, 0.50, 0.975))
+
+msum <- summary(m2, probs = c(0.50, 0.0275, 0.975), digits = 2)
+
+msum <- as.data.frame(unlist(msum))
+msum[, 1:8] <- round(msum[, 1:8], 2)
+
+readr::write_csv(msum[, c(4:7)], "results/model_estimates.csv")
 prior_summary(m2)
 
+# Inverse Logit of estimates for Table 3:
+logistic(c(3.38, 2.56, 4.34)) # intercept
+logistic(c(-2.51, -3.40, -1.74)) # chinook
+logistic(c(0.50, 0.02, 2.07)) # sigma detyear
 #--------------------------------------------#
 # working with estimates
 source("scripts/setup.R")
-# convert estimates to probability scale
-logistic(c(3.38, 2.56, 4.34)) # intercept median and se, lower and upper ci
-logistic(c(-2.51, -3.40, -1.74)) # b_chn median and se, lower and upper ci
 
 # median probability of a chn exiting
 logistic(3.38 -2.51)
@@ -70,6 +79,7 @@ p.exit.wst <- logistic(post$`(Intercept)`)
 p.exit.chn <- logistic(post$`(Intercept)` + post$Bchn)
 diff.exit = p.exit.wst - p.exit.chn
 quantile(diff.exit)
+hist(diff.exit)
 
 #--------------------------------------------#
 #--------------------------------------------#
@@ -79,24 +89,31 @@ post <- as.data.frame(m2) # posterior probability; 4000 samples for each par
 str(post)
 
 names(post) <- c("alpha", "Bchn", "2011","2012", "2013", "2014", "2015", "2016", "2017", "Sigma_detyear")
+
+# plotting marginal distributions:
 post$Chn <- logistic(post$alpha + post$Bchn)
 post$alpha_p <- logistic(post$alpha)
 post <- post[ , c("alpha_p", "Chn")]
 post2 <- tidyr::gather(post, key = "parameter", value = "value")
 head(post2)
 
-ggplot(post2) +
+post2 %>% 
+  filter(value > 0.49, value < 0.99) %>% 
+ggplot() +
   geom_density(aes(x = value, fill = parameter, group = parameter), alpha = 0.7) +
-  labs(x = "Posterior probability of exiting Yolo Bypass", y = "Density") +
-  scale_fill_manual(values = c("alpha_p" = "darkblue", "Chn" = "limegreen"), 
-                    labels = c("White sturgeon     ", "fall-run Chinook Salmon          ")) +
-  theme_minimal() +
-  theme(text = element_text(size = 14),
+  labs(x = "Marginal posterior probability of exiting Yolo Bypass", y = "Density") +
+  scale_fill_manual(values = c("alpha_p" = "white", "Chn" = "grey50"), 
+                    labels = c("White sturgeon     ", "fall-run Chinook salmon          ")) +
+  geom_rug(aes(x = value), alpha = 0.5) +
+  theme_bw() +
+  theme(text = element_text(size = 15),
         axis.text = element_text(size = 14),
-    legend.position = c(0.2, 0.75),
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12),
+    legend.position = c(0.25, 0.78),
+        legend.text = element_text(size = 15),
+        legend.title = element_text(size = 13),
         legend.spacing = unit(14, "points")) +
-  guides(fill = guide_legend(title = "Species",
+  guides(fill = guide_legend(title = "",
                              keywidth = 0.5, keyheight = 0.5, default.unit = "inch",
                              stroke = 1))
+
+ggsave("Fig2_posteriordistributions.png", height = 6, width = 10)

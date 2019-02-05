@@ -70,3 +70,11 @@ chn_exits_final %>%
   group_by(Detyear, ExitStatus) %>% 
   tally() %>% 
   filter(ExitStatus == 1)
+
+# residence/detection window of white sturgeon
+
+wst %>% 
+  group_by(Detyear) %>% 
+  summarise(firstdet = min(DateTimePST), loc = Station[DateTimePST == min(DateTimePST)],
+            lastdet = max(DateTimePST), loc2 = Station[DateTimePST == max(DateTimePST)])
+

@@ -7,7 +7,6 @@ chnidx <- select(chn, TagID, TagGroup) %>%
   filter(!duplicated(TagID))
 
 fl <- left_join(fl, chnidx)
-vet(fl)
 
 fl <- fl %>% 
   filter(TagGroup != "fca_2012") %>%  #filter out 2012 fish; not included in analyses

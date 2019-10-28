@@ -6,7 +6,6 @@ library(ybp)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
-library(cfs.misc)
 #--------------------------------------------#
 #--------------------------------------------#
 # exit station names
@@ -75,3 +74,5 @@ FirstLast <- function(df) {
   do.call(rbind, lapply(split(df, df$TagID), firstlastOneFish))
 }
 
+# convenience functions
+len <- function(x){length(unique(x))}

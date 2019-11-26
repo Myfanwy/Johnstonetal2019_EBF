@@ -2,7 +2,7 @@
 #  chn
 source("scripts/setup.R")
 
-fl <- FirstLast(chn)
+fl <- FirstLast(chn, dtc2 = "DateTimeUTC")
 chnidx <- select(chn, TagID, TagGroup) %>% 
   filter(!duplicated(TagID))
 
@@ -27,6 +27,7 @@ fl <- fl %>%
   select(TagID, Species, Detyear, TagDetyear, ExitStatus)
 
 chn_exits_final <- fl
+
 saveRDS(chn_exits_final, "data/chn_exits_final.rds")
 
 #-------------------------------------------------------#
@@ -44,14 +45,14 @@ putahcrk <- c("PutahCrk_mace"  ,  "PutahCrk_AbvChk" , "Putah_creek", "PutahCrk_s
 bypass <- c("YB_CacheCk", "YB_ToeDrain_Base" , "YB_WallaceWr" ,"YB_AbvLisbonWr", stations[1:26],
             "Lisbon_RT")
 bypass <- bypass[!(bypass %in% putahcrk)]
-bypass
 
 bard <- readRDS("data/BARD_query_fcatags.rds") # query that Matt Pagel ran on 8/30/2018
-head(bard)
-ne <- filter(fl, ExitStatus == 0) # no-exit
+
+ne <- filter(chn_exits_final, ExitStatus == 0) # no-exit
 
 bard <- filter(bard, TagID %in% ne$TagID)
-len(bard$TagID)
+
+len(bard$TagID) # 22 yolo fish detected in BARD database
 
 bard <- bard %>% 
   group_by(TagID) %>% 
@@ -59,21 +60,21 @@ bard <- bard %>%
   ungroup() %>% 
   rename(DateTimeUTC = DetectDate, Rkm = RiverKm)
 
-bardp <- fishpaths(bard, bard$TagID, bard$Station)
+bardp <- fishpaths(bard, "TagID", "Station", "DateTimeUTC")
 
 bardfl <- FirstLast(bard)
 bardfl <- filter(bardfl, !(LastStation %in% bypass), !(LastStation %in% cacheslough))
-bardfl # 2 fish; check on their last detections
+bardfl # 2 fish with "no exit" were detected on BARD array; check on their last detections in YB array - were they before or after the BARD detections?
 
-chnp <- fishpaths(chn, chn$TagID, chn$Station)
+chnp <- fishpaths(chn, "TagID", "Station", "DateTimeUTC")
 
-ne_paths <- filter(chnp, TagID %in% c(31567, 37845)) %>% 
+ne_paths <- filter(chnp, TagID %in% c(31567, 37845)) %>% # 31567 last detected at I80; 37845 last detected at cache creek
   arrange(TagID, DateTimePST)
-View(ne_paths) #
+
 
 bardp %>% 
   filter(TagID %in% c(31567, 37845)) %>% 
-  arrange(TagID, DateTimePST) %>% 
+  arrange(TagID, DateTimeUTC) %>% 
   View()
 
 #  the riovista detection happened in the middle of its path; for the other fish, made it all the way to the Feather before turning around and heading BACK up the bypass; final detection at Knaggs in December; chn_exits_final ready to model.

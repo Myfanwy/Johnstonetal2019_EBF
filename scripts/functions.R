@@ -13,11 +13,11 @@ logistic <- function (x)
 
 #--------------------------------------------#
 # for finding final detection locations:
-firstlastOneFish <- function(x, datetimecol = dtc2) {
+firstlastOneFish <- function(x, dtc2 = datetimecol) {
   
   #testing
-  # x = bard
-  # dtc2 = "DateTimeUTC"
+#   x = chn
+#   dtc2 = "DateTimePST"
   
   x$DateTimeCol = x[[dtc2]]
   x = x[order(x$DateTimeCol), ]
@@ -28,14 +28,16 @@ firstlastOneFish <- function(x, datetimecol = dtc2) {
   data.frame(
     TagID = x$TagID[1],
     FirstStation = FirstRow$Station,
+    FirstDetection = FirstRow$DateTimeCol,
     LastStation = LastRow$Station,
-    reachdistance = FirstRow$Rkm - LastRow$Rkm,
+    LastDetection = LastRow$DateTimeCol,
+    
        stringsAsFactors = FALSE
   )
 }
 
-FirstLast <- function(df, dtc2 = "DateTimeUTC") {
-  do.call(rbind, lapply(split(df, df$TagID), firstlastOneFish))
+FirstLast <- function(df, datetimecol = "DateTimeUTC") {
+  do.call(rbind, lapply(split(df, df$TagID), firstlastOneFish, dtc2 = datetimecol))
 }
 
 
@@ -65,6 +67,23 @@ redRowFun <- function(d, dtc1)
     r = as.POSIXct(range(d[[dtc1]]))
     data.frame(d[1, ], arrival = r[1], departure = r[2], stringsAsFactors = FALSE)
 }
+
+
+#--------------------------------------------#
+# join with bard
+
+join_with_bard <- function(ybdf, barddf) {
+  
+  barddf = bardne; ybdf = ybne # testing
+  barddf = data.frame(barddf); ybdf = data.frame(ybdf)
+  str(barddf)  ; str(ybdf)
+  names(barddf)
+  names(ybdf)
+  barddf = select(barddf, TagID, DateTagged, DateTimeUTC = DetectDate, Station, Rkm = RiverKm, Receiver)
+  ybdf = select(ybdf, TagID, DateTagged, DateTimeUTC, Station, Rkm, Receiver, TagGroup, CodeSpace)
+  
+  }
+
 
 # convenience functions
 len <- function(x){length(unique(x))}

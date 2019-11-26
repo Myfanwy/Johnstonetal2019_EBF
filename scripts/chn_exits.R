@@ -2,7 +2,7 @@
 #  chn
 source("scripts/setup.R")
 
-fl <- FirstLast(chn, dtc2 = "DateTimeUTC")
+fl <- FirstLast(chn, "DateTimePST")
 chnidx <- select(chn, TagID, TagGroup) %>% 
   filter(!duplicated(TagID))
 
@@ -44,21 +44,20 @@ putahcrk <- c("PutahCrk_mace"  ,  "PutahCrk_AbvChk" , "Putah_creek", "PutahCrk_s
 # locations in bypass
 bypass <- c("YB_CacheCk", "YB_ToeDrain_Base" , "YB_WallaceWr" ,"YB_AbvLisbonWr", stations[1:26],
             "Lisbon_RT")
+
 bypass <- bypass[!(bypass %in% putahcrk)]
 
 bard <- readRDS("data/BARD_query_fcatags.rds") # query that Matt Pagel ran on 8/30/2018
 
-ne <- filter(chn_exits_final, ExitStatus == 0) # no-exit
+ne <- filter(chn_exits_final, ExitStatus == 0) # 64/215 fish were no-exit; these are the fish we have to check against the BARD database, to see if they were picked up anywhere outside the bypass.  Want to join their tracks with the bard tracks.
 
-bard <- filter(bard, TagID %in% ne$TagID)
+ybne <- filter(chn, TagID %in% ne$TagID)
+bardne <- filter(bard, TagID %in% ne$TagID)
 
-len(bard$TagID) # 22 yolo fish detected in BARD database
+len(bardne$TagID) # 22 ne yolo fish detected in BARD database
 
-bard <- bard %>% 
-  group_by(TagID) %>% 
-  filter(!duplicated(DetectDate)) %>% 
-  ungroup() %>% 
-  rename(DateTimeUTC = DetectDate, Rkm = RiverKm)
+# join together
+
 
 bardp <- fishpaths(bard, "TagID", "Station", "DateTimeUTC")
 
@@ -70,6 +69,13 @@ chnp <- fishpaths(chn, "TagID", "Station", "DateTimeUTC")
 
 ne_paths <- filter(chnp, TagID %in% c(31567, 37845)) %>% # 31567 last detected at I80; 37845 last detected at cache creek
   arrange(TagID, DateTimePST)
+
+chn %>% 
+  filter(TagID == 37845) %>% 
+  ggplot(aes(x = DateTimePST, y = reorder(Station, Rkm))) +
+  geom_point(alpha = 0.5)
+
+FirstLast(chn[chn$TagID == 37845, ], "DateTimePST")
 
 
 bardp %>% 

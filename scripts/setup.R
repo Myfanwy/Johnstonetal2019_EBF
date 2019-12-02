@@ -4,6 +4,9 @@
 library(dplyr)
 library(ggplot2)
 library(lubridate)
+# if(require(tagtales))
+#   devtools::install_github("Myfanwy/tagtales")
+library(tagtales)
 source("scripts/functions.R")
 #--------------------------------------------#
 #--------------------------------------------#

@@ -2,7 +2,7 @@
 #  chn
 source("scripts/setup.R")
 
-fl <- FirstLast(chn, "DateTimePST")
+fl <- first_last(chn, "TagID", "DateTimeUTC", "Station")
 chnidx <- select(chn, TagID, TagGroup) %>% 
   filter(!duplicated(TagID))
 

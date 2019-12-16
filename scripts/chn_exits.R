@@ -122,13 +122,13 @@ len(bardne$TagID) # 22 ne yolo fish detected in BARD database
 # join together
 
 
-bardp <- fishpaths(bard, "TagID", "Station", "DateTimeUTC")
+bardp <- fishtrackr::fishpaths(bard, "TagID", "Station", "DateTimeUTC")
 
 bardfl <- FirstLast(bard)
 bardfl <- filter(bardfl, !(LastStation %in% bypass), !(LastStation %in% cacheslough))
 bardfl # 2 fish with "no exit" were detected on BARD array; check on their last detections in YB array - were they before or after the BARD detections?
 
-chnp <- fishpaths(chn, "TagID", "Station", "DateTimeUTC")
+chnp <- fishtrackr::fishpaths(chn, "TagID", "Station", "DateTimeUTC")
 
 ne_paths <- filter(chnp, TagID %in% c(31567, 37845)) %>% # 31567 last detected at I80; 37845 last detected at cache creek
   arrange(TagID, DateTimePST)

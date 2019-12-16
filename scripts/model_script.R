@@ -12,11 +12,24 @@ wst_exits <- readRDS("data/wst_exits_final.rds")
 chn_exits <- readRDS("data/chn_exits_final.rds")
 
 exits = rbind(wst_exits, chn_exits)
-exits
+
+exits$ExitStatus = ifelse(exits$ExitStatus == 0, "did_not_exit", "exited")
+
+exits$ExitStatus = ifelse(exits$TagID %in% c(13728, 13729, 20168, 
+                                                 20164, 2600, 2625, 
+                                                 2619, 9986, 9973), "shed_mort", exits$ExitStatus)
+
+exits$ExitStatus = ifelse(exits$TagID %in% c(33940, 37835,37845), "shed", exits$ExitStatus)
+
+table(exits$ExitStatus)
+
 sum(duplicated(exits$TagID[exits$Species=="wst"])) # many white sturgeon were returners in any given year
 exits$Bchn <- ifelse(exits$Species == "chn", 1, 0)
+table(exits$Species)
+
 exits$Nfish_total = ifelse(exits$Species == "chn", 215, 229) # 215 chinook obs, 229 wst (92 ind fish)
 
+exits$ExitStatus = as.factor(exits$ExitStatus)
 #--------------------------------------------#
 # First Model - random effects on TagID and Detyear
 

@@ -7,8 +7,8 @@
 
 library(dplyr)
 
-# database connection: requires >= RSQLite 2.1.1.  Database was used in YBT DWR 2018 report
-db = RSQLite::dbConnect(RSQLite::SQLite(), "~/DropboxCFS/NewPROJECTS/AECCA-2018-YoloTelemetry/WORKING/GoogleDriveBackup20190723/yb_database.sqlite")
+# database connection: requires >= RSQLite 2.1.1.  
+db = RSQLite::dbConnect(RSQLite::SQLite(), "yb_database.sqlite")
 
 #--------------------------------------------#
 

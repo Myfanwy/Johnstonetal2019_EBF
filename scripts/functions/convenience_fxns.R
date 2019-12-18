@@ -1,5 +1,5 @@
 #############
-# functions #--------------------------------#
+# Convenience Functions #--------------------------------#
 #############
 
 #--------------------------------------------#
@@ -27,5 +27,14 @@ join_with_bard <- function(ybdf, barddf) {
   }
 
 
-# convenience functions
+## ht == headtail
+ht <- function(d, n=6) {
+  
+  rbind(head(d, n), tail(d, n))
+  
+}
+
+# typing shortcuts
 len <- function(x){length(unique(x))}
+csn <- function(x){colSums(is.na(x))}
+rsn <- function(x){rowSums(is.na(x))}

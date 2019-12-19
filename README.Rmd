@@ -4,7 +4,19 @@ author: "Myfanwy Johnston"
 date: "11/5/2018"
 output: 
   html_document:
-    keep_md: true
+    keep_md: FALSE
 ---
 
 Project Repo for code and analysis accompanying Johnston et al. 2019 in the special issue of _Environmental Biology of Fishes_ ("Informing California Fish Management Using Biotelemetry").
+
+Steps of the analysis:
+
+## Munging
+1. Read in raw data - group receivers at gated locations and discard simultaneous detections.
+2. Screen for orphan detections (no tags detected before release, and all detections can be traced to a receiver deployment)
+3. Discard false detections (identified in the VUE FDA screen)
+4. Identify shed tags/mortalities
+5. Categorize exit status for each individual
+
+## Statistical analysis
+

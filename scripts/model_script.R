@@ -35,9 +35,8 @@ exits$ExitStatus = as.factor(exits$ExitStatus)
 
 if(!file.exists("stan_models/model_script_results.rda")) { 
   
-  m1 = stan_glmer(ExitStatus ~ Bchn + (1|TagID) + (1|Detyear),
-                data = exits, family = "binomial", adapt_delta=0.99,
-                prior = hs())
+    m1 = stan_polr(ExitStatus ~ Bchn + factor(Detyear), method = "logistic",
+                   data = exits, adapt_delta=0.99, prior = NULL)
     save(m1, file = "stan_models/model_script_results.rda")
   } else {
     load(file = "stan_models/model_script_results.rda")
@@ -59,6 +58,47 @@ if(!file.exists("stan_models/model_script_results_m2.rda")) {
 } else {
   load("stan_models/model_script_results_m2.rda")
 }
+
+#---------------------------------------------#
+# Final Model: random effects on detection year only
+library(rstan)
+
+mod = stan_model("stan_models/categorical.stan")
+
+x = model.matrix(~ Bchn, exits)
+detYear = model.matrix(~ factor(Detyear) - 1, exits)
+data = list(N = nrow(exits),
+            K = length(unique(exits$ExitStatus)),
+            D = ncol(x),
+            y = as.integer(factor(exits$ExitStatus)),
+            x = x,
+            M = ncol(detYear),
+            detYear = detYear)
+
+fit = sampling(mod, data)
+
+#--------------------------------------------#
+# Working with the output from the Stan model
+samples = as.data.frame(fit)
+
+base_probs = samples[,grep("base_prob", colnames(samples))]
+colnames(base_probs) = levels(exits$ExitStatus)
+sapply(base_probs, quantile, p = c(0.025, 0.5, 0.975))
+
+bchn_probs = samples[,grep("Bchn_prob", colnames(samples))]
+colnames(bchn_probs) = levels(exits$ExitStatus)
+sapply(bchn_probs, quantile, p = c(0.025, 0.5, 0.975))
+
+# compare to observed proportions
+table(exits$ExitStatus, exits$Bchn) / nrow(exits)
+
+# Diff between sp
+quantile(base_probs$exited - bchn_probs$exited, p = c(0.025, 0.5, 0.975))
+
+#--------------------------------------------#
+#--------------------------------------------#
+#--------------------------------------------#
+
 
 summary(m2, pars = c("alpha", "Bchn", "Sigma[Detyear:(Intercept),(Intercept)]"), 
         digits = 2, probs = c(0.0275, 0.50, 0.975))

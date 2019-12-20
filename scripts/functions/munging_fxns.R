@@ -97,13 +97,13 @@ format_dets = function(dets_df) {
 
 format_bard_dets = function(bard_dets_df) {
   bard_dets_df %>%
+    mutate(DateTimePST = with_tz(DetectDate, "Pacific/Pitcairn")) %>% 
     filter(TagID %in% alltags$TagID) %>% # filter down to just our fish
-    mutate(DateTimePST = with_tz(ymd_hms(DetectDate), "Pacific/Pitcairn"),
-           DateTagged = as.Date(DateTagged)) %>%
-    select(TagID, DateTimePST, Receiver, Station, DateTagged, rkms = RiverKm)
+    mutate(DateTagged = as.Date(DateTagged)) %>%
+    select(TagID, DateTimePST, Receiver, Station, DateTagged, rkms = RiverKm) %>% 
     arrange(DateTimePST) -> bard_dets_dff
     
-    bard_dets_dff <- as.data.frame(bard_dets_dff)
+    bard_dets_dff <- data.frame(bard_dets_dff)
   
   return(bard_dets_dff)
 }
@@ -225,4 +225,11 @@ stopifnot(nrow(dets_df) - nrow(d6) == nrow(falsedets))
 
 return(d6)
 
+}
+
+#--------------------------------------------#
+# add in river kilometer info for grouped stn; requires stns has been loaded
+add_rkms = function(dets_df) {
+  dets_dff = left_join(dets_df, stns)
+  return(dets_dff)
 }

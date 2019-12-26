@@ -10,7 +10,7 @@
 # Discard simultaneous detections within grouped stations
 # Handle redeployed tag
 # Discard detections for a given tag prior to its tag date
-# Scan for shed tags/mortalities
+# Verify & discard false detections identified by VUE software
 
 source("scripts/functions/munging_fxns.R")
 source("scripts/functions/convenience_fxns.R")
@@ -78,34 +78,48 @@ stns <- readRDS("data_clean/deployment_data/stns.rds")
 dets7 <- add_rkms(dets6)
 
 library(ggplot2)
+#--------------------------------------------#
+# Matt - how to loop through the pages in this function? I'd like to save a pdf or printable object of the plots to include with supplementary materials, as this determination process was done visually, not programmatically - I looked at each fish's track and only discarded detections that were inconsistent with its spatiotemporal history
+plot_fdas(dets7, mm, page = 2)
+#--------------------------------------------#
 
-dets7 %>% 
-  filter(TagID %in% mm$TagID) %>% 
-  mutate(fd = ifelse(DateTimePST %in% mm$DateTimePST, "questn", "real")) %>% 
-  ggplot() +
-  geom_jitter(aes(x = DateTimePST, 
-                  y = reorder(GroupedStn, rkms),
-                  color = fd,
-                  alpha = fd,
-                  size = fd), 
-              width = 0.005) +
-  scale_alpha_manual(values = c(1, 0.15)) +
-  scale_size_manual(values = c(2, 1)) +
-  scale_x_datetime(date_labels = "%b-%d-%Y") +
-  ggforce::facet_wrap_paginate(~TagID, scales = "free", ncol = 2, nrow = 3, page = 9)
-
+# tags with false detections to discard:
 dis <- c(13722, 31563, 37835,  46644,  56473,  56483,  56492, 56494) # 56494; only discard the 2013 detection
-
 keep56494 <- filter(mm, TagID == 56494 & DateTimePST == "2017-02-11 03:40:23")
 mm <- anti_join(mm, keep56494)
 
+# Notes on detection histories:
+#--------------------------------------------#
 # false or shed: 13728 (chn, 2015), 23053 (chn, 2013)
 # Possible overtopping: 46644 - discarded for now, but would be good to check
 # Just plain weird: 56473, 56492
 # good story of returns: 56477, 56486
+# uneven gaps inconsistent with a shed: 2619
 
 fd_discard <- filter(mm, TagID %in% dis)
-str(fd_discard)
-filter(fd_discard, TagID == 56494) # good; this is the one we want to discard, not the other one
+filter(fd_discard, TagID == 56494) %>% pull(DateTimePST) # good; this is the one we want to discard, not the other one
 
 dets8 <- anti_join(dets7, mm[,c("TagID","Receiver","DateTimePST")])
+
+# Truncate shed tags/mortalities
+sheds <- c(13729, 20168, 20164, 37835, 2600, 2625, 9986, 2619)
+gaps <- c(37835, 9973, 31555, 9982) # last tag there just needs to be truncated to d8 < 2014
+
+#Plot shed paths (for flipping through them in Plots pane)
+for (i in sheds){
+  p <- dets8 %>%
+    filter(TagID == i) %>%
+    ggplot() +
+    geom_jitter(aes(x = DateTimePST, y =  GroupedStn), alpha = 0.25, width = .1) +
+    labs(y = "Receiver", title = paste("Shed TagID", i))
+  print(p)
+}
+# gaps
+for (i in gaps){
+  p <- dets8 %>%
+    filter(TagID == i) %>%
+    ggplot() +
+    geom_jitter(aes(x = DateTimePST, y =  GroupedStn), alpha = 0.5, width = .1) +
+    labs(y = "Receiver", title = paste("Gap TagID", i))
+  print(p)
+}

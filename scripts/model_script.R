@@ -8,17 +8,19 @@ options(digits = 2)
 #--------------------------------------------#
 # data
 
-wst_exits <- readRDS("data/wst_exits_final.rds")
-chn_exits <- readRDS("data/chn_exits_final.rds")
+wst_exits <- readRDS("data_clean/wst_exits_final.rds")
+chn_exits <- readRDS("data_clean/chn_exits_final.rds")
 
 exits = rbind(wst_exits, chn_exits)
 
 exits$ExitStatus = ifelse(exits$ExitStatus == 0, "did_not_exit", "exited")
 
+# fish with detections consistent with a shed tag or a mortality near a receiver
 exits$ExitStatus = ifelse(exits$TagID %in% c(13728, 13729, 20168, 
                                                  20164, 2600, 2625, 
                                                  2619, 9986, 9973), "shed_mort", exits$ExitStatus)
 
+# fish with final detections in the bypass that were recovered outside the bypass without their tags
 exits$ExitStatus = ifelse(exits$TagID %in% c(33940, 37835,37845), "shed", exits$ExitStatus)
 
 table(exits$ExitStatus)

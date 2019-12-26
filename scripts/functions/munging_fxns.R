@@ -233,3 +233,26 @@ add_rkms = function(dets_df) {
   dets_dff = left_join(dets_df, stns)
   return(dets_dff)
 }
+
+# False Detection Functions
+#--------------------------------------------#
+plot_fdas <- function(dets_df, fda_df, page = 1) {
+  
+  dets_df %>% 
+  filter(TagID %in% fda_df$TagID) %>% 
+  mutate(fd = ifelse(DateTimePST %in% fda_df$DateTimePST, "questn", "real")) ->fddets 
+  
+  p <- ggplot(fddets) +
+  geom_jitter(aes(x = DateTimePST, 
+                  y = reorder(GroupedStn, rkms),
+                  color = fd,
+                  alpha = fd,
+                  size = fd), 
+              width = 0.005) +
+  scale_alpha_manual(values = c(1, 0.15)) +
+  scale_size_manual(values = c(2, 1)) +
+  scale_x_datetime(date_labels = "%b-%d-%Y") +
+  ggforce::facet_wrap_paginate(~TagID, scales = "free", ncol = 2, nrow = 3, page = page)
+  
+  return(p)
+}

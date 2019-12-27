@@ -38,3 +38,12 @@ ht <- function(d, n=6) {
 len <- function(x){length(unique(x))}
 csn <- function(x){colSums(is.na(x))}
 rsn <- function(x){rowSums(is.na(x))}
+
+
+# plot a fish track:
+plot_track = function(dets_df, tagid) {
+  d = subset(dets_df, TagID == tagid)
+  ggplot(d, aes(x = DateTimePST, y = reorder(GroupedStn, rkms))) +
+    geom_jitter(alpha = 0.25, width = 0.2) +
+    theme_bw()
+}

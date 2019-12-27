@@ -236,11 +236,13 @@ add_rkms = function(dets_df) {
 
 # False Detection Functions
 #--------------------------------------------#
-plot_fdas <- function(dets_df, fda_df, page = 1) {
+plot_fdas <- function(dets_df, fda_df, tagids_subset) {
   
   dets_df %>% 
   filter(TagID %in% fda_df$TagID) %>% 
-  mutate(fd = ifelse(DateTimePST %in% fda_df$DateTimePST, "questn", "real")) ->fddets 
+  mutate(fd = ifelse(DateTimePST %in% fda_df$DateTimePST, "Flagged as False", "Not flagged")) -> fddets 
+  
+  fddets = subset(fddets, TagID %in% tagids_subset)
   
   p <- ggplot(fddets) +
   geom_jitter(aes(x = DateTimePST, 
@@ -252,7 +254,15 @@ plot_fdas <- function(dets_df, fda_df, page = 1) {
   scale_alpha_manual(values = c(1, 0.15)) +
   scale_size_manual(values = c(2, 1)) +
   scale_x_datetime(date_labels = "%b-%d-%Y") +
-  ggforce::facet_wrap_paginate(~TagID, scales = "free", ncol = 2, nrow = 3, page = page)
-  
+  guides(color = guide_legend(title = NULL,
+                              direction = "horizontal",
+                              nrow = 1,
+                              override.aes = list(alpha = 1)),
+         alpha = "none",
+         size = "none") +
+  facet_wrap(~TagID, scales = "free", ncol = 2, nrow = 3) +
+    theme_minimal() +
+    theme(legend.position = "top") 
+
   return(p)
 }

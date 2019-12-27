@@ -79,11 +79,26 @@ dets7 <- add_rkms(dets6)
 
 library(ggplot2)
 #--------------------------------------------#
-# Matt - how to loop through the pages in this function? I'd like to save a pdf or printable object of the plots to include with supplementary materials, as this determination process was done visually, not programmatically - I looked at each fish's track and only discarded detections that were inconsistent with its spatiotemporal history
-plot_fdas(dets7, mm, page = 2)
+fds_tagids = unique(mm$TagID)
+# series of faceted plots to inspect:
+p = list(
+aa = plot_fdas(dets7, mm, tagids_subset = fds_tagids[1:6]),
+bb = plot_fdas(dets7, mm, tagids_subset = fds_tagids[7:12]),
+cc = plot_fdas(dets7, mm, tagids_subset = fds_tagids[13:18]),
+dd = plot_fdas(dets7, mm, tagids_subset = fds_tagids[19:24]),
+ee = plot_fdas(dets7, mm, tagids_subset = fds_tagids[25:30]),
+ff = plot_fdas(dets7, mm, tagids_subset = fds_tagids[31:36]),
+gg = plot_fdas(dets7, mm, tagids_subset = fds_tagids[37:42]),
+hh = plot_fdas(dets7, mm, tagids_subset = fds_tagids[43:48]),
+ii = plot_fdas(dets7, mm, tagids_subset = fds_tagids[49:50])
+)
 #--------------------------------------------#
 
-# tags with false detections to discard:
+library(gridExtra)
+plots <- do.call(marrangeGrob, args = list(grobs = p, ncol=1, nrow=1))
+ggsave("figures/false_det_screen.pdf", plots, width=11, height=8.5)
+
+# After visually checking spatiotemporal history of each fish, tags with likely true false detections to discard:
 dis <- c(13722, 31563, 37835,  46644,  56473,  56483,  56492, 56494) # 56494; only discard the 2013 detection
 keep56494 <- filter(mm, TagID == 56494 & DateTimePST == "2017-02-11 03:40:23")
 mm <- anti_join(mm, keep56494)
@@ -95,11 +110,12 @@ mm <- anti_join(mm, keep56494)
 # Just plain weird: 56473, 56492
 # good story of returns: 56477, 56486
 # uneven gaps inconsistent with a shed: 2619
+# Wallace weir rescues: 37835, 37845 (both in 2015), probably 20161, and 20164 (2014)
 
 fd_discard <- filter(mm, TagID %in% dis)
 filter(fd_discard, TagID == 56494) %>% pull(DateTimePST) # good; this is the one we want to discard, not the other one
 
-dets8 <- anti_join(dets7, mm[,c("TagID","Receiver","DateTimePST")])
+dets8 <- anti_join(dets7, fd_discard[,c("TagID","Receiver","DateTimePST")])
 
 # Truncate shed tags/mortalities
 sheds <- c(13729, 20168, 20164, 37835, 2600, 2625, 9986, 2619)
@@ -110,7 +126,10 @@ for (i in sheds){
   p <- dets8 %>%
     filter(TagID == i) %>%
     ggplot() +
-    geom_jitter(aes(x = DateTimePST, y =  GroupedStn), alpha = 0.25, width = .1) +
+    geom_jitter(aes(x = DateTimePST, 
+                    y =  reorder(GroupedStn, rkms)), 
+                alpha = 0.25, 
+                width = .1) +
     labs(y = "Receiver", title = paste("Shed TagID", i))
   print(p)
 }
@@ -123,3 +142,9 @@ for (i in gaps){
     labs(y = "Receiver", title = paste("Gap TagID", i))
   print(p)
 }
+
+# fish rescued on 11/9/14 at 11:45am PST
+plot_track(dets8, 20161) # probably this one
+# fish rescued on 12/2/14 at 10:50am:
+plot_track(dets8, 20164) # probably this one
+plot_track(dets8, 20160) # this one the timeline doesn't quite match

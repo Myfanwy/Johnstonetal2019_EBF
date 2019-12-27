@@ -266,3 +266,57 @@ plot_fdas <- function(dets_df, fda_df, tagids_subset) {
 
   return(p)
 }
+
+#-------------------------------------------------------#
+# Get detection year:
+
+get_det_year = function (detsdf, timecol) 
+{
+  detsdf$Detyear = ifelse(
+    detsdf[[timecol]] %within% (
+      ymd_hms("2011-07-01 00:00:00") %--%
+        ymd_hms("2012-06-30 23:59:59")
+    ),
+    2011,
+    ifelse(
+      detsdf[[timecol]] %within%
+        (
+          ymd_hms("2012-07-01 00:00:00") %--% ymd_hms("2013-06-30 23:59:59")
+        ),
+      2012,
+      ifelse(
+        detsdf[[timecol]] %within% (
+          ymd_hms("2013-07-01 00:00:00") %--%
+            ymd_hms("2014-06-30 23:59:59")
+        ),
+        2013,
+        ifelse(
+          detsdf[[timecol]] %within%
+            (
+              ymd_hms("2014-07-01 00:00:00") %--% ymd_hms("2015-06-30 23:59:59")
+            ),
+          2014,
+          ifelse(
+            detsdf[[timecol]] %within% (
+              ymd_hms("2015-07-01 00:00:00") %--%
+                ymd_hms("2016-06-30 23:59:59")
+            ),
+            2015,
+            ifelse(
+              detsdf[[timecol]] %within%
+                (
+                  ymd_hms("2016-07-01 00:00:00") %--% ymd_hms("2017-06-30 23:59:59")
+                ),
+              2016,
+              ifelse(detsdf[[timecol]] %within% (
+                ymd_hms("2017-07-01 00:00:00") %--%
+                  ymd_hms("2018-06-30 23:59:59")
+              ), 2017, 2018)
+            )
+          )
+        )
+      )
+    )
+  )
+  return(detsdf)
+}

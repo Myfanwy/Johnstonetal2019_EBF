@@ -117,34 +117,4 @@ filter(fd_discard, TagID == 56494) %>% pull(DateTimePST) # good; this is the one
 
 dets8 <- anti_join(dets7, fd_discard[,c("TagID","Receiver","DateTimePST")])
 
-# Truncate shed tags/mortalities
-sheds <- c(13729, 20168, 20164, 37835, 2600, 2625, 9986, 2619)
-gaps <- c(37835, 9973, 31555, 9982) # last tag there just needs to be truncated to d8 < 2014
-
-#Plot shed paths (for flipping through them in Plots pane)
-for (i in sheds){
-  p <- dets8 %>%
-    filter(TagID == i) %>%
-    ggplot() +
-    geom_jitter(aes(x = DateTimePST, 
-                    y =  reorder(GroupedStn, rkms)), 
-                alpha = 0.25, 
-                width = .1) +
-    labs(y = "Receiver", title = paste("Shed TagID", i))
-  print(p)
-}
-# gaps
-for (i in gaps){
-  p <- dets8 %>%
-    filter(TagID == i) %>%
-    ggplot() +
-    geom_jitter(aes(x = DateTimePST, y =  GroupedStn), alpha = 0.5, width = .1) +
-    labs(y = "Receiver", title = paste("Gap TagID", i))
-  print(p)
-}
-
-# fish rescued on 11/9/14 at 11:45am PST
-plot_track(dets8, 20161) # probably this one
-# fish rescued on 12/2/14 at 10:50am:
-plot_track(dets8, 20164) # probably this one
-plot_track(dets8, 20160) # this one the timeline doesn't quite match
+saveRDS(dets8, "data_clean/detection_data/1_all_detections.rds")

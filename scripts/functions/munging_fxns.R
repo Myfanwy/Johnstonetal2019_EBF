@@ -146,7 +146,9 @@ get_stations <- function(detections_df, deployments_df) {
   result <- as.data.frame(result)
   if(sum(is.na(result$Start)) > 0){
     warning("warning: the resulting dataframe contains NAs in the joining columns - check for orphan detections")
-    }
+  }
+  colrm = c("Start", "End")
+  result = result[ , !(names(result) %in% colrm)]
   return(result)
 }
 
@@ -320,3 +322,59 @@ get_det_year = function (detsdf, timecol)
   )
   return(detsdf)
 }
+
+
+#--------------------------------------------#
+# BARD tidying functions
+#--------------------------------------------#
+rm_redundant_yb_dets = function(bard_dets_df) {
+  
+  ybdups = c("YB_AbvLisbonWr", "YB_BCE", "YB_BCE2", "YB_BCW", "YB_BCW2", 
+"YB_CacheCk", "YB_ToeDrain_Base", "YB_WallaceWr")
+  
+  bard_dets_df %>% 
+    filter(!(Station %in% ybdups)) -> bard_dets_dff
+  return(bard_dets_dff)
+  
+}
+
+BARD_group_stns_AND_rm_simuls = function(bard_dets_df) {
+  bard_dets_df %>%
+    group_by(rkms) %>%
+    mutate(nstns = len(Station),
+           grp_name = Station[1]) %>%
+    filter(!duplicated(grp_name)) %>%
+    arrange(desc(nstns)) %>%
+    select(grp_name, rkms, nstns) -> bd_grouped # 46 locations that need to be grouped or removed
+  
+  test = left_join(bard_dets_df, bd_grouped, by = "rkms")
+  test2 = test %>%
+    group_by(TagID, grp_name) %>%
+    filter(!duplicated(DateTimePST)) %>%
+    ungroup()
+  return(test2)
+}
+
+#--------------------------------------------#
+# join with bard
+
+join_with_bard <- function(dets_df, bard_dets_df) {
+  
+  bard_dets_df  = select(bard_dets_df, 
+                       TagID,
+                       DateTimePST,
+                       Receiver,
+                       GroupedStn = grp_name,
+                       rkms)
+  
+dets_df = dets_df[ , c("TagID", "DateTimePST", "Receiver", "GroupedStn", "rkms")]
+
+dets_dff = bind_rows(dets_df, bard_dets_df)
+
+cs_index = select(alltags, TagID, CodeSpace)
+
+dets_dff = left_join(dets_dff, cs_index) # get back codespace
+  
+return(dets_dff)
+
+  }

@@ -25,49 +25,25 @@ source("scripts/setup.R") # loads detections cleaned in scripts/analysis/1_munge
 
 # White Sturgeon
 #--------------------------------------------#
-# Get fish paths with tag_tales() function, split paths into detection years, get last location in each detection year.
-
-# TAGS
-wst_tags = readxl::read_excel("data_raw/tag_data_raw/WhiteSturgeon_tags.xlsx", na="") %>% 
-  select(DateTagged, TagID, CodeSpace, EstTagLife_days, TagGroup)
-wst_tags = add_tag_end_col(wst_tags)
-
-# DETECTIONS
-wst_dets = subset(dets8, TagID %in% alltags$TagID[alltags$Sp == "wst"])
-wst_dets = get_det_year(wst_dets, "DateTimePST")
-
-# Join dets with tagend info; remove detections past tag end date
-wst_dets = left_join(wst_dets, select(wst_tags, TagID, EstTagEnd))
-wst_dets2 = rm_post_tag_end_dets(wst_dets) 
-stopifnot(nrow(wst_dets) - nrow(wst_dets2) == 68) # removed the 68 dets from Tag 2860
-
+# Split into detection years, get last location in each detection year.
 #--------------------------------------------#
-# Make table of detections per fish per year
-dettable <- as.data.frame.matrix(table(wst_dets2$TagID, wst_dets2$Detyear))
-
-# Check 2011 fish's last locations:
-wst_paths <- tag_tales(wst_dets2, wst_dets2$TagID, wst_dets2$GroupedStn, "DateTimePST")
-
-wst_paths <- wst_paths %>% 
-  arrange(TagID, DateTimePST) %>% 
-  select(TagID, CodeSpace, DateTimePST, GroupedStn, Detyear, rkms, EstTagEnd)
-
-wp = split(wst_paths, wst_paths$Detyear)
-str(wp) # list of dataframes - need to apply first_last() to each one
-
-wpfl = list(2011:2017)
-for(i in 1:length(wp)) {
-wpfl[i] = lapply(wp[i], first_last, 
-                              tagidcol = "TagID", 
-                              datetimecol = "DateTimePST", 
-                              stationcol = "GroupedStn") }
 
 
-wpfl = rbindlist(wpfl)
-wpfl = get_det_year(wpfl, "last_det")
-filter(wpfl, TagID == 56494)
+wp = split(wst_dets, wst_dets$Detyear)
 
-wpfl %>% 
+# apply first_last to each detection year
+wfl = list()
+for(i in 1:7) {
+  wfl[i] = lapply(wp[i], first_last, "TagID", "DateTimePST", "GroupedStn")
+}
+names(wfl) = names(wp)
+wfl = data.frame(rbindlist(wfl, use.names = TRUE, idcol = "Detyear"), stringsAsFactors = FALSE)
+
+table(wfl$last_stn, wfl$Detyear)
+as.data.frame.matrix(table(wst_dets2$TagID, wst_dets2$Detyear)) #compare with raw dets
+filter(wfl, TagID == 56494)
+
+wpfl = wfl %>% 
   group_by(Detyear, TagID) %>% 
   mutate(exit_status = case_when(last_stn %in% exitstations ~ 1,
                                  TRUE ~ 0))

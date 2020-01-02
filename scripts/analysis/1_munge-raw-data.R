@@ -28,7 +28,9 @@ deps = readRDS("data_raw/deployment_data_raw/deps_data_raw.rds") # YB array depl
 bard_deps = read.csv("data_raw/deployment_data_raw/BARDDeps2011thru18.csv", stringsAsFactors = FALSE) # BARD deployments; contains some YB receivers, have to parse
 
 dets = readRDS("data_raw/detection_data_raw/dets_data_raw.rds")
-bard_dets = data.frame(readRDS("data_raw/detection_data_raw/BARD_query_fcatags.rds"))
+bard_dets1 = data.frame(readRDS("data_raw/detection_data_raw/BARD_query_fcatags.rds"))
+bard_dets2 = readRDS("data_raw/detection_data_raw/2017WST_queryresults.rds") 
+
 
 # CLEAN DATA
 alltags = format_tags(alltags)
@@ -38,7 +40,12 @@ deps = format_deps(deps)
 bard_deps = format_bard_deps(bard_deps)
 
 dets = format_dets(dets)
-bard_dets = format_bard_dets(bard_dets)
+bard_dets1 = format_bard_dets(bard_dets1)
+bard_dets2 = format_bard_dets(bard_dets2)
+bard_dets = bind_rows(bard_dets1, bard_dets2)
+
+bd_check = bind_rows(bard_dets1, bard_dets2)
+
 
 dets2 = rm_dup_dets_within_recs(dets) # slow function; removes duplicate data within TagIDs and Receivers
 dets2 = subset_to_study_period(dets2, 
@@ -53,8 +60,8 @@ bard_dets = subset_to_study_period(bard_dets,
 
 bard_dets = get_det_year(bard_dets, "DateTimePST")
 bard_dets = rm_redundant_yb_dets(bard_dets)
-
 bard_dets = BARD_group_stns_AND_rm_simuls(bard_dets)
+
 #--------------------------------------------#
 
 # HANDLE DUPLICATE DEPLOYMENTS; PULL IN CORRECT STATION METADATA 
@@ -73,13 +80,11 @@ dets3 = discard_simuls(dets2)
 dups = duplicated(dets3[, c("TagID", "GroupedStn", "DateTimePST")]) # slow; has to check every row
 dets4 <- dets3[!dups, ] # filter out duplicate Lisbon Weir detections
 
-
 # HANDLE REDEPLOYED TAG
 alltags %>% filter(TagID == 55555) %>% pull(Comments) # confirm recap tagID
 dets5 <- handle_redeployed_tag(dets4)
 
 # DISCARD FALSE DETECTIONS for a given tag prior to its tag date; these represent detections from tags with different codespaces
-
 dets6 <- check_dets_against_tagdates(dets5)
 dets7 <- add_rkms(dets6)
 # DISCARD FALSE DETECTIONS identified by VUE software
@@ -110,7 +115,7 @@ plots <- do.call(marrangeGrob, args = list(grobs = p, ncol=1, nrow=1))
 ggsave("figures/false_det_screen.pdf", plots, width=11, height=8.5)
 
 # After visually checking spatiotemporal history of each fish, tags with likely true false detections to discard:
-dis <- c(13722, 13728, 31563, 37835,  46644,  56473,  56483,  56492, 56494) # 56494; only discard the 2013 detection
+dis <- c(13728, 31563, 37835,  46644,  56473,  56483,  56492, 56494) # 56494; only discard the 2013 detection
 keep56494 <- filter(mm, TagID == 56494 & DateTimePST == "2017-02-11 03:40:23")
 mm <- anti_join(mm, keep56494)
 
@@ -136,7 +141,7 @@ dets8 <- anti_join(dets7, fd_discard[,c("TagID","Receiver","DateTimePST")])
 rm56483 <- filter(dets8, TagID == 56483, Station == "YBBLR")
 rm31555 <- filter(dets8, TagID == 31555, DateTimePST > as.Date("2015-01-01")) # different codespace tag
 
-dets8 <- anti_join(dets8, rm56483)
+dets8 = anti_join(dets8, rm56483)
 dets8 = anti_join(dets8, rm31555)
 
 dets9 = join_with_bard(dets_df = dets8, bard_dets_df = bard_dets)

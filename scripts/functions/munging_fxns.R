@@ -97,10 +97,10 @@ format_dets = function(dets_df) {
 
 format_bard_dets = function(bard_dets_df) {
   bard_dets_df %>%
-    mutate(DateTimePST = with_tz(DetectDate, "Pacific/Pitcairn")) %>% 
+    mutate(DateTimePST = with_tz(ymd_hms(DetectDate), "Pacific/Pitcairn"),
+           RiverKm = as.numeric(RiverKm)) %>% 
     filter(TagID %in% alltags$TagID) %>% # filter down to just our fish
-    mutate(DateTagged = as.Date(DateTagged)) %>%
-    select(TagID, DateTimePST, Receiver, Station, DateTagged, rkms = RiverKm) %>% 
+    select(TagID, DateTimePST, Receiver, Station, rkms = RiverKm) %>% 
     arrange(DateTimePST) -> bard_dets_dff
     
     bard_dets_dff <- data.frame(bard_dets_dff)

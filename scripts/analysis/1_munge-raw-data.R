@@ -25,7 +25,6 @@ alltags = readRDS("data_raw/tag_data_raw/alltags_raw.rds")
 chntags = readRDS("data_raw/tag_data_raw/chn_tags_raw.rds")
 
 deps = readRDS("data_raw/deployment_data_raw/deps_data_raw.rds") # YB array deployments only; 
-bard_deps = read.csv("data_raw/deployment_data_raw/BARDDeps2011thru18.csv", stringsAsFactors = FALSE) # BARD deployments; contains some YB receivers, have to parse
 
 dets = readRDS("data_raw/detection_data_raw/dets_data_raw.rds")
 bard_dets1 = data.frame(readRDS("data_raw/detection_data_raw/BARD_query_fcatags.rds"))
@@ -37,31 +36,13 @@ alltags = format_tags(alltags)
 chntags = format_tags(chntags)
 
 deps = format_deps(deps)
-bard_deps = format_bard_deps(bard_deps)
 
 dets = format_dets(dets)
-bard_dets1 = format_bard_dets(bard_dets1)
-bard_dets2 = format_bard_dets(bard_dets2)
-bard_dets = bind_rows(bard_dets1, bard_dets2)
-
-bd_check = bind_rows(bard_dets1, bard_dets2)
-
 
 dets2 = rm_dup_dets_within_recs(dets) # slow function; removes duplicate data within TagIDs and Receivers
 dets2 = subset_to_study_period(dets2, 
                                start = force_tz(ymd_hms("2012-01-01 00:00:00"), "Pacific/Pitcairn"),
                                end =   force_tz(ymd_hms("2018-07-01 00:00:00"), "Pacific/Pitcairn")) # removes all detections outside study period
-#--------------------------------------------#
-# Finish BARD cleaning
-bard_dets = rm_dup_dets_within_recs(bard_dets)
-bard_dets = subset_to_study_period(bard_dets, 
-                                    start = force_tz(ymd_hms("2012-01-01 00:00:00"), "Pacific/Pitcairn"),
-                               end = force_tz(ymd_hms("2018-07-01 00:00:00"), "Pacific/Pitcairn"))
-
-bard_dets = get_det_year(bard_dets, "DateTimePST")
-bard_dets = rm_redundant_yb_dets(bard_dets)
-bard_dets = BARD_group_stns_AND_rm_simuls(bard_dets)
-
 #--------------------------------------------#
 
 # HANDLE DUPLICATE DEPLOYMENTS; PULL IN CORRECT STATION METADATA 
@@ -143,6 +124,7 @@ rm31555 <- filter(dets8, TagID == 31555, DateTimePST > as.Date("2015-01-01")) # 
 
 dets8 = anti_join(dets8, rm56483)
 dets8 = anti_join(dets8, rm31555)
+
 
 dets9 = join_with_bard(dets_df = dets8, bard_dets_df = bard_dets)
 

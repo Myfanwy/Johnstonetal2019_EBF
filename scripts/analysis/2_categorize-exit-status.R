@@ -51,7 +51,13 @@ head(ex)
 str(ex)
 table(ex$ExitStatus)
 
+ex[ex$ExitStatus == 0, ]
+wpfl[wpfl$exit_status == 1, ] # 56483 and 56494 were
+wpfl[wpfl$TagID == 56483, ]
 saveRDS(wst_exits_final, "data/wst_exits_final.rds")
+
+# figure out NULL stations
+View(wst_dets[wst_dets$TagID == 56483, ])
 
 
 # CHINOOK

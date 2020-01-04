@@ -68,20 +68,6 @@ format_deps = function(deps_df) {
   return(deps_dff)
 }
 
-# bard
-format_bard_deps = function(bard_deps_df) {
-  bard_deps_df %>% 
-  select(Station = Location,
-         Start,
-         End = Stop, 
-         rkms = RiverKm) %>% 
-    mutate(Start = ymd_hms(Start),
-           End = ymd_hms(End)) -> bard_deps_df
-  
-  bard_deps_df = bard_deps_df[!is.na(bard_deps_df$End), ] # get rid of ragged ends
-  
-  return(bard_deps_df)
-}
 
 # Detections; depends on alltags df
 format_dets = function(dets_df) {
@@ -95,18 +81,6 @@ format_dets = function(dets_df) {
   return(dets_dff)
 }
 
-format_bard_dets = function(bard_dets_df) {
-  bard_dets_df %>%
-    mutate(DateTimePST = with_tz(ymd_hms(DetectDate), "Pacific/Pitcairn"),
-           RiverKm = as.numeric(RiverKm)) %>% 
-    filter(TagID %in% alltags$TagID) %>% # filter down to just our fish
-    select(TagID, DateTimePST, Receiver, Station, rkms = RiverKm) %>% 
-    arrange(DateTimePST) -> bard_dets_dff
-    
-    bard_dets_dff <- data.frame(bard_dets_dff)
-  
-  return(bard_dets_dff)
-}
 
 #--------------------------------------------#
 # functions to check exported tables
@@ -323,58 +297,3 @@ get_det_year = function (detsdf, timecol)
   return(detsdf)
 }
 
-
-#--------------------------------------------#
-# BARD tidying functions
-#--------------------------------------------#
-rm_redundant_yb_dets = function(bard_dets_df) {
-  
-  ybdups = c("YB_AbvLisbonWr", "YB_BCE", "YB_BCE2", "YB_BCW", "YB_BCW2", 
-"YB_CacheCk", "YB_ToeDrain_Base", "YB_WallaceWr")
-  
-  bard_dets_df %>% 
-    filter(!(Station %in% ybdups)) -> bard_dets_dff
-  return(bard_dets_dff)
-  
-}
-
-BARD_group_stns_AND_rm_simuls = function(bard_dets_df) {
-  bard_dets_df %>%
-    group_by(rkms) %>%
-    mutate(nstns = len(Station),
-           grp_name = Station[1]) %>%
-    filter(!duplicated(grp_name)) %>%
-    arrange(desc(nstns)) %>%
-    select(grp_name, rkms, nstns) -> bd_grouped # 46 locations that need to be grouped or removed
-  
-  test = left_join(bard_dets_df, bd_grouped, by = "rkms")
-  test2 = test %>%
-    group_by(TagID, grp_name) %>%
-    filter(!duplicated(DateTimePST)) %>%
-    ungroup()
-  return(test2)
-}
-
-#--------------------------------------------#
-# join with bard
-
-join_with_bard <- function(dets_df, bard_dets_df) {
-  
-  bard_dets_df  = select(bard_dets_df, 
-                       TagID,
-                       DateTimePST,
-                       Receiver,
-                       GroupedStn = grp_name,
-                       rkms)
-  
-dets_df = dets_df[ , c("TagID", "DateTimePST", "Receiver", "GroupedStn", "rkms")]
-
-dets_dff = bind_rows(dets_df, bard_dets_df)
-
-cs_index = select(alltags, TagID, CodeSpace)
-
-dets_dff = left_join(dets_dff, cs_index) # get back codespace
-  
-return(dets_dff)
-
-  }

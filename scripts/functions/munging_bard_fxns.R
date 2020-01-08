@@ -39,10 +39,12 @@ format_bard_dets = function(bard_dets_df) {
 
 rm_redundant_yb_dets = function(bard_dets_df) {
   
-  ybdups = c("YB_AbvLisbonWr", "YB_AbvRotScrwTrp", "YB_AbvSwanston", "YB_BCE", 
-"YB_BCE2", "YB_BCW", "YB_BCW2", "YB_CacheCk", "YB_KnaggsRnch", 
+  ybdups = c("YB_AbvLisbonWr", "YB_AbvLisbonWr", "YB_AbvRotScrwTrp", "YB_AbvSwanston", 
+"YB_BCE", "YB_BCE", "YB_BCE2", "YB_BCE2", "YB_BCW", "YB_BCW", 
+"YB_BCW2", "YB_BCW2", "YB_CacheCk", "YB_CacheCk", "YB_KnaggsRnch", 
 "YB_LeveeMarker", "YB_LisbonWr", "YB_RotScrwTrp", "YB_Swanston", 
-"YB_ToeDrain_Base", "YB_WallaceWr")
+"YB_ToeDrain_Base", "YB_ToeDrain_Base", "YB_WallaceWr", "YB_WallaceWr"
+)
   
   bard_dets_df %>% 
     filter(!(Station %in% ybdups)) -> bard_dets_dff

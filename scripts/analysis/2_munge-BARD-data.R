@@ -36,10 +36,8 @@ bw = sort(unique(bard_dets2$Station))
 bc[grep("YB", bc)] #omg they have DIFFERENT YB names
 bw[grep("YB", bw)]
 
-bard_dets = bind_rows(bard_chn, bard_wst)
-
+bard_dets = bind_rows(bard_dets1, bard_dets2)
 bd_check = bind_rows(bard_dets1, bard_dets2)
-
 
 # Finish BARD cleaning
 bard_dets = get_det_year(bard_dets, "DateTimePST")
@@ -48,5 +46,7 @@ bard_dets = BARD_group_stns_AND_rm_simuls(bard_dets) # need to add NULL stns
 bard_detsf = BARD_fix_NULL_values(bard_dets)
 csn(bard_dets)
 csn(bard_detsf)
-unique(bard_detsf$Receiver[is.na(bard_detsf$rkms)])
+unique(bard_dets$Receiver[is.na(bard_dets$rkms)])
+unique(bard_dets$Station[bard_dets$Receiver %in% c(104441, 104440, 101256, 109544)])
 #--------------------------------------------#
+unique(bard_deps$rkms[bard_deps$Station %in% unique(bard_dets$Station[bard_dets$Receiver %in% c(104441, 104440, 101256, 109544)])])

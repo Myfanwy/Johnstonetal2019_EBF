@@ -10,7 +10,7 @@ stns <- readRDS("data_clean/deployment_data/stns.rds")
 alltags = readRDS("data_raw/tag_data_raw/alltags_raw.rds") 
 chntags = readRDS("data_raw/tag_data_raw/chn_tags_raw.rds")
 
-# deployment data
+# deployment data - not currently used, remove prior to publishing
 bard_deps = read.csv("data_raw/deployment_data_raw/BARDDeps2011thru18.csv", stringsAsFactors = FALSE) # BARD deployments; contains some YB receivers, have to parse
 
 # BARD detections

@@ -25,21 +25,17 @@ alltags = readRDS("data_raw/tag_data_raw/alltags_raw.rds")
 chntags = readRDS("data_raw/tag_data_raw/chn_tags_raw.rds")
 
 deps = readRDS("data_raw/deployment_data_raw/deps_data_raw.rds") # YB array deployments only; 
-
 dets = readRDS("data_raw/detection_data_raw/dets_data_raw.rds")
 
-bard_dets1 = data.frame(readRDS("data_raw/detection_data_raw/BARD_query_fcatags.rds"))
-bard_dets2 = readRDS("data_raw/detection_data_raw/2017WST_queryresults.rds") 
-
-
 # CLEAN DATA
+
+# format
 alltags = format_tags(alltags)
 chntags = format_tags(chntags)
-
 deps = format_deps(deps)
-
 dets = format_dets(dets)
 
+# remove duplicates
 dets2 = rm_dup_dets_within_recs(dets) # slow function; removes duplicate data within TagIDs and Receivers
 dets2 = subset_to_study_period(dets2, 
                                start = force_tz(ymd_hms("2012-01-01 00:00:00"), "Pacific/Pitcairn"),
@@ -126,6 +122,9 @@ rm31555 <- filter(dets8, TagID == 31555, DateTimePST > as.Date("2015-01-01")) # 
 dets8 = anti_join(dets8, rm56483)
 dets8 = anti_join(dets8, rm31555)
 
+bard_dets = readRDS("data_clean/bard_data/bard_dets.rds")
+
+head(bard_dets)
 
 dets9 = join_with_bard(dets_df = dets8, bard_dets_df = bard_dets)
 

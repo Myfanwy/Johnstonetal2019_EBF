@@ -126,7 +126,7 @@ join_with_bard <- function(dets_df, bard_dets_df) {
                        TagID,
                        DateTimePST,
                        Receiver,
-                       GroupedStn = grp_name,
+                       GroupedStn,
                        rkms)
   
 dets_df = dets_df[ , c("TagID", "DateTimePST", "Receiver", "GroupedStn", "rkms")]
@@ -139,4 +139,4 @@ dets_dff = left_join(dets_dff, cs_index) # get back codespace
   
 return(dets_dff)
 
-  }
+}

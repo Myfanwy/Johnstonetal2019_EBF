@@ -53,11 +53,14 @@ return(dfnew)
 ybchk = lapply(syd, yb_enter_onefish)
 ybchk = do.call(rbind, ybchk)
 
+
 tail(arrange(ybchk, TagID), 25) # if they weren't detected at all that year, they wouldn't be in the detections. Of those detected, should only analyze exits for fish that have a 1 in that year.
 
 head(wst_dets) # have to remove the detections for the fish where ybstatus = 0
 
-
+wp = left_join(wst_dets, ybchk)
+head(wp)
+wp <- filter(wp, ybstatus == 1)
 
 wp = split(wst_dets, wst_dets$Detyear) 
 
@@ -78,8 +81,6 @@ wpfl = wfl %>%
   ungroup()
 
 table(wpfl$exit_status) # how many of these fish never entered the yolo bypass in a given year tho?
-
-ybrecs
 
 ex = readRDS("data_clean/wst_exits_final.rds")
 head(ex)

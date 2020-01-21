@@ -27,11 +27,44 @@ source("scripts/setup.R") # loads detections cleaned in scripts/analysis/1_munge
 #--------------------------------------------#
 # Split into detection years, get last location in each detection year.
 #--------------------------------------------#
-wp = split(wst_dets, wst_dets$Detyear)
+wst_dets %>% 
+  group_by(TagID, Detyear) %>% 
+  filter(!duplicated(GroupedStn)) %>% 
+  ungroup() %>% 
+  select(TagID, Detyear, GroupedStn) -> yb_peryear
+
+head(yb_peryear)
+
+syd = split(yb_peryear, list(yb_peryear$TagID, yb_peryear$Detyear))
+syd <- syd[sapply(syd, nrow) > 0]
+
+# apply to a single fish
+yb_enter_onefish <- function(df) {
+  
+  df = as.data.frame(df)
+  
+  dfnew = data.frame(TagID = as.numeric(unique(df$TagID)),
+                   Detyear = as.numeric(unique(df$Detyear)),
+                   ybstatus = ifelse(sum(df$GroupedStn %in% ybrecs) > 0, 1, 0) # if they entered YB that year, 1, else 0
+                   )
+return(dfnew)
+}
+
+ybchk = lapply(syd, yb_enter_onefish)
+ybchk = do.call(rbind, ybchk)
+
+tail(arrange(ybchk, TagID), 25) # if they weren't detected at all that year, they wouldn't be in the detections. Of those detected, should only analyze exits for fish that have a 1 in that year.
+
+head(wst_dets) # have to remove the detections for the fish where ybstatus = 0
+
+
+
+wp = split(wst_dets, wst_dets$Detyear) 
+
 
 # apply first_last to each detection year
 wfl = list()
-for(i in 1:7) {
+for(i in 1:8) {
   wfl[i] = lapply(wp[i], first_last, "TagID", "DateTimePST", "GroupedStn")
 }
 names(wfl) = names(wp)
@@ -44,20 +77,21 @@ wpfl = wfl %>%
   mutate(exit_status = ifelse(TagID %in% known_sheds, 3, exit_status)) %>% # 3 = shed tag
   ungroup()
 
-table(wpfl$exit_status)
+table(wpfl$exit_status) # how many of these fish never entered the yolo bypass in a given year tho?
+
+ybrecs
 
 ex = readRDS("data_clean/wst_exits_final.rds")
 head(ex)
 str(ex)
 table(ex$ExitStatus)
 
-ex[ex$ExitStatus == 0, ]
+ex[ex$ExitStatus == 0, ] # did not exit
+ex[ex$ExitStatus == 1, ] # exited
+
 wpfl[wpfl$exit_status == 1, ] # 56483 and 56494 were
 wpfl[wpfl$TagID == 56483, ]
 saveRDS(wst_exits_final, "data/wst_exits_final.rds")
-
-# figure out NULL stations
-View(wst_dets[wst_dets$TagID == 56483, ])
 
 
 # CHINOOK

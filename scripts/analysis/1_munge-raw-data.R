@@ -27,6 +27,7 @@ chntags = readRDS("data_raw/tag_data_raw/chn_tags_raw.rds")
 deps = readRDS("data_raw/deployment_data_raw/deps_data_raw.rds") # YB array deployments only; 
 
 dets = readRDS("data_raw/detection_data_raw/dets_data_raw.rds")
+
 bard_dets1 = data.frame(readRDS("data_raw/detection_data_raw/BARD_query_fcatags.rds"))
 bard_dets2 = readRDS("data_raw/detection_data_raw/2017WST_queryresults.rds") 
 

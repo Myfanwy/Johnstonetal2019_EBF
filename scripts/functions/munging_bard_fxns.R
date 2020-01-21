@@ -24,10 +24,11 @@ format_bard_deps = function(bard_deps_df) {
 # detections
 format_bard_dets = function(bard_dets_df) {
   bard_dets_df %>%
-    mutate(DateTimePST = with_tz(ymd_hms(DetectDate), "Pacific/Pitcairn"),
+    mutate(DateTimePST = force_tz(ymd_hms(DateTimePST), "Pacific/Pitcairn"),
            RiverKm = as.numeric(RiverKm)) %>% 
     filter(TagID %in% alltags$TagID) %>% # filter down to just our fish
-    select(TagID, DateTimePST, Receiver, Station, rkms = RiverKm) %>% 
+    select(TagID, DateTimePST, Receiver, Station = DetectionLocation, rkms = RiverKm,
+           Deployment_start, Deployment_end) %>% 
     arrange(DateTimePST) -> bard_dets_dff
     
     bard_dets_dff <- data.frame(bard_dets_dff)
@@ -39,12 +40,23 @@ format_bard_dets = function(bard_dets_df) {
 
 rm_redundant_yb_dets = function(bard_dets_df) {
   
-  ybdups = c("YB_AbvLisbonWr", "YB_AbvLisbonWr", "YB_AbvRotScrwTrp", "YB_AbvSwanston", 
-"YB_BCE", "YB_BCE", "YB_BCE2", "YB_BCE2", "YB_BCW", "YB_BCW", 
-"YB_BCW2", "YB_BCW2", "YB_CacheCk", "YB_CacheCk", "YB_KnaggsRnch", 
-"YB_LeveeMarker", "YB_LisbonWr", "YB_RotScrwTrp", "YB_Swanston", 
-"YB_ToeDrain_Base", "YB_ToeDrain_Base", "YB_WallaceWr", "YB_WallaceWr"
-)
+  ybdups = c(
+    "YB_AbvLisbonWr",
+    "YB_AbvRotScrwTrp",
+    "YB_AbvSwanston",
+    "YB_BCE",
+    "YB_BCE2",
+    "YB_BCW",
+    "YB_BCW2",
+    "YB_CacheCk",
+    "YB_KnaggsRnch",
+    "YB_LeveeMarker",
+    "YB_LisbonWr",
+    "YB_RotScrwTrp",
+    "YB_Swanston",
+    "YB_ToeDrain_Base",
+    "YB_WallaceWr"
+  )
   
   bard_dets_df %>% 
     filter(!(Station %in% ybdups)) -> bard_dets_dff

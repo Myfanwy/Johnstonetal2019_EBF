@@ -36,7 +36,9 @@ format_bard_dets = function(bard_dets_df) {
   return(bard_dets_dff)
 }
 
-
+#nullrecs = unique(bard_dets1$Receiver[is.na(bard_dets1$rkms)])
+# bc = sort(unique(bard_dets1$Station))
+# bc[grep("YB", bc)] #YB names
 
 rm_redundant_yb_dets = function(bard_dets_df) {
   
@@ -70,10 +72,10 @@ BARD_group_stns_AND_rm_simuls = function(bard_dets_df) {
 bard_dets_df %>%
     group_by(rkms) %>%
     mutate(nstns = len(Station),
-           GroupedStn = Station[1]) %>%
+           GroupedStn = Station[1]) %>% # just pulls the first station name at that river kilometer
     filter(!duplicated(GroupedStn)) %>%
     arrange(desc(nstns)) %>%
-    select(GroupedStn, rkms, nstns) -> bd_grouped # 154 locations that need to be grouped or removed
+    select(GroupedStn, rkms, nstns) -> bd_grouped # locations that need to be grouped or removed
   
   test = left_join(bard_dets_df, bd_grouped)
   # remove simultaneous dets at grouped stns
@@ -81,63 +83,37 @@ bard_dets_df %>%
     group_by(TagID, GroupedStn) %>%
     filter(!duplicated(DateTimePST)) %>%
     ungroup()
+  
   return(test2)
+  
 }
-
-# Need to add NULL stations here:
-# nr = wst_dets[wst_dets$GroupedStn == "NULL", ]
-# # have receiver & GroupedStn, need rkms
-# nr = nr[!duplicated(nr$Receiver), c("Receiver") ]
-# nr = filter(nr, Receiver != 104440)
-# nr %>% 
-#   mutate(GroupedStn = 
-#            case_when(Receiver == 104441 ~ "SF9_NE", # rkms in bard_deps
-#                           Receiver == 101256 ~ "Santa_Clara_Shoals1_N", 
-#                           Receiver == 109544 ~ "SR_SRWTPD_Old",
-#                           TRUE ~ "YBBI80" #rkms in deps
-#                           )  
-#   ) -> nr
-
-# pp = filter(wst_dets, !duplicated(GroupedStn)) %>% 
-#   filter(GroupedStn %in% nr$GroupedStn) %>% 
-#   select(GroupedStn, rkms)
-# 
-# px = filter(bard_deps, !duplicated(Station)) %>% 
-#   filter(Station %in% nr$GroupedStn) %>% 
-#   select(GroupedStn = Station, rkms) %>% 
-#   mutate(rkms = as.numeric(rkms)) %>% 
-#   bind_rows(pp) %>% 
-#   filter(!duplicated(GroupedStn))
-# 
-# nrr = left_join(nr, px)
   
 
 BARD_fix_NULL_values = function(bard_dets_df) {
   
-  # remove stations where we have no rkms
-  rm_SPcontrol = bard_dets_df[bard_dets_df$Receiver == 104440 & bard_dets_df$GroupedStn == "NULL", ]
+  # remove stations where we have no rkms: 109544
+  rm_SPcontrol = bard_dets_df[bard_dets_df$Receiver == 109544 & bard_dets_df$Station == "NULL", ]
   bard_dets_df = anti_join(bard_dets_df, rm_SPcontrol)
   
-  # replace matching recs with true NAs:
-  bard_dets_df$GroupedStn[bard_dets_df$GroupedStn == "NULL"] <- NA
-  bard_dets_df$Station[bard_dets_df$Station == "NULL"] <- NA
+  # manually assign correct stations/rkms to tagids with NULL values:
   
-  # make rkms key to bring in groupedstn names
-  nrr = structure(
-    list(
-      Receiver = c(104441L, 101256L, 109544L),
-      GroupedStn = c("SF9_SE",
-                     "Santa_Clara_Shoals1_N", "SR_SRWTPD_E"),
-      rkms = c(38.151, 102.75,
-               191.514)
-    ),
-    class = "data.frame",
-    row.names = c(NA,-3L)
-  )
+  #56483
+  bard_dets_df$rkms[(bard_dets_df$TagID == 56483 | bard_dets_df$TagID == 56490) & 
+                      bard_dets_df$Receiver == 101256] <- 102.75
+  bard_dets_df$Station[(bard_dets_df$TagID == 56483 | bard_dets_df$TagID == 56490) & 
+                         bard_dets_df$Receiver == 101256 & bard_dets_df$Station == "NULL"] <- "Santa_Clara_Shoals1_N"
   
-  bard_dets_dff = left_join(bard_dets_df, nrr)
+  #2880:
+  bard_dets_df$rkms[(bard_dets_df$TagID == 2880) & bard_dets_df$Receiver == 104440 &
+                      bard_dets_df$Station == "NULL"] <- 37.451
+  bard_dets_df$Station[(bard_dets_df$TagID == 2880) & bard_dets_df$Receiver == 104440 &
+                      bard_dets_df$Station == "NULL"] <- "SF9_SW"
+  bard_dets_df$rkms[(bard_dets_df$TagID == 2880) & bard_dets_df$Receiver == 104441 &
+                      bard_dets_df$Station == "NULL"] <- 38.151
+  bard_dets_df$Station[(bard_dets_df$TagID == 2880) & bard_dets_df$Receiver == 104440 &
+                      bard_dets_df$Station == "NULL"] <- "SF9_NE"
   
-  return(bard_dets_dff)
+  return(bard_dets_df)
   
 }
 

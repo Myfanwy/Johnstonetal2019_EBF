@@ -17,7 +17,7 @@ known_sheds = c(37835 , # this fish was recovered in fyke and identified by its 
 # - occurs when a fish's last detection location is at BCN, BCS, the base of the Toe drain, OR in the BARD array, AND that fish is not detected again within the Yolo Bypass array in the same detection year (i.e., white sturgeon have a clear final exit in a given detection year).  
 
 # 1) Shed/Mortality/Did not Exit the Yolo Bypass
-# - all other fish in the study fall into this category.
+# - all other fish in the study fall into this category (given, if a white sturgeon, they returned to the bypass in a given year).
 
 # BEGIN
 #--------------------------------------------#
@@ -27,16 +27,20 @@ source("scripts/setup.R") # loads detections cleaned in scripts/analysis/1_munge
 #--------------------------------------------#
 # Split into detection years, get last location in each detection year.
 #--------------------------------------------#
+
+# for each tagID and year, what stations were they detected at?
 wst_dets %>% 
   group_by(TagID, Detyear) %>% 
   filter(!duplicated(GroupedStn)) %>% 
   ungroup() %>% 
-  select(TagID, Detyear, GroupedStn) -> yb_peryear
+  select(TagID, Detyear, GroupedStn) %>% 
+  arrange(TagID) -> yb_peryear
 
 head(yb_peryear)
 
+# split by TagID/Detyear
 syd = split(yb_peryear, list(yb_peryear$TagID, yb_peryear$Detyear))
-syd <- syd[sapply(syd, nrow) > 0]
+syd <- syd[sapply(syd, nrow) > 0] # keep the combos that have >1 detection
 
 # apply to a single fish
 yb_enter_onefish <- function(df) {
@@ -56,21 +60,18 @@ ybchk = do.call(rbind, ybchk)
 
 tail(arrange(ybchk, TagID), 25) # if they weren't detected at all that year, they wouldn't be in the detections. Of those detected, should only analyze exits for fish that have a 1 in that year.
 
-head(wst_dets) # have to remove the detections for the fish where ybstatus = 0
-
 wp = left_join(wst_dets, ybchk)
-head(wp)
 wp <- filter(wp, ybstatus == 1)
-
-wp = split(wst_dets, wst_dets$Detyear) 
-
+wp = data.frame(wp)
 
 # apply first_last to each detection year
+wp = split(wp, wp$Detyear)
 wfl = list()
-for(i in 1:8) {
+for(i in 1:7) {
   wfl[i] = lapply(wp[i], first_last, "TagID", "DateTimePST", "GroupedStn")
 }
 names(wfl) = names(wp)
+
 wfl = data.frame(rbindlist(wfl, use.names = TRUE, idcol = "Detyear"), stringsAsFactors = FALSE)
 
 wpfl = wfl %>% 
@@ -80,22 +81,63 @@ wpfl = wfl %>%
   mutate(exit_status = ifelse(TagID %in% known_sheds, 3, exit_status)) %>% # 3 = shed tag
   ungroup()
 
-table(wpfl$exit_status) # how many of these fish never entered the yolo bypass in a given year tho?
+table(wpfl$exit_status) # 
 
 ex = readRDS("data_clean/wst_exits_final.rds")
-head(ex)
-str(ex)
-table(ex$ExitStatus)
-
 ex[ex$ExitStatus == 0, ] # did not exit
 ex[ex$ExitStatus == 1, ] # exited
 
-wpfl[wpfl$exit_status == 1, ] # 56483 and 56494 were
-wpfl[wpfl$TagID == 56483, ]
-saveRDS(wst_exits_final, "data/wst_exits_final.rds")
+wpfl[wpfl$exit_status == 1, ] # 56487 and 56471 did not exit
+wpfl[wpfl$TagID == 56471, ]
 
+saveRDS(wpfl, "data_clean/model_data/wst_exits_modeldata.rds")
 
+#--------------------------------------------#
 # CHINOOK
+#--------------------------------------------#
 chn_fl = first_last(chn_dets, "TagID", "DateTimePST", "GroupedStn")
 
+chnidx <- select(alltags, TagID, TagGroup, Sp) %>% 
+  filter(!duplicated(TagID), Sp == "chn")
 
+fl <- left_join(chn_fl, chnidx)
+fl <- get_det_year(fl, "first_det")
+
+fl <- fl %>% 
+  filter(TagGroup != "fca_2012") %>%  #filter out 2012 fish; not included in analyses
+  group_by(Detyear, TagID) %>% 
+  mutate(exit_status = case_when(last_stn %in% ybrecs ~ 1, # 1 = did not exit/mortality/shed tag
+                                 TRUE ~ 2)) %>% # 2 = exited
+  mutate(exit_status = ifelse(TagID %in% known_sheds, 3, exit_status)) %>% # 3 = shed tag
+  ungroup()
+
+table(fl$exit_status)
+
+saveRDS(fl, "data_clean/model_data/chn_exits_modeldata.rds")
+
+
+library(ggplot2)
+
+wpfl %>% 
+  mutate(color = case_when(TagID %in% c(2861, 2864, 2865, 2881, 56487, 56471) ~ "stranded",
+                           TRUE ~ "exited")) %>% 
+ggplot(aes(x = factor(Detyear), y = factor(exit_status))) +
+  geom_jitter(aes(color = factor(color)), alpha = 0.7, width = 0.1) +
+  theme_bw()
+
+plot_track(wst_dets, 2861)
+plot_track(wst_dets, 56487)
+
+dd = filter(wst_dets, TagID %in% c(2861, 2864, 2865, 2881, 56487, 56471))
+wsttales = tagtales::tag_tales(dd, 
+                               dd$TagID, 
+                               dd$GroupedStn, 
+                               "DateTimePST",
+                               Threshold = 60*35)
+
+wsttales %>% 
+  filter(TagID %in% c(2861, 2864, 2865, 2881, 56487, 56471)) %>% 
+  ggplot(aes(x = arrival, y = reorder(GroupedStn, rkms))) +
+  geom_jitter(aes(color = factor(TagID)), alpha = 0.5, width = 0.1, show.legend = FALSE) +
+  facet_wrap(~TagID, scales = "free") +
+  theme_bw()

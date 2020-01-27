@@ -82,13 +82,11 @@ wpfl = wfl %>%
   ungroup()
 
 table(wpfl$exit_status) # 
+# manual assignments: we know that 56487 exited in 2013 because it's detected elsewhere in the delta in later years:
+wpfl$exit_status[wpfl$TagID == 56487 & wpfl$Detyear == 2013] <- 2
 
-ex = readRDS("data_clean/wst_exits_final.rds")
-ex[ex$ExitStatus == 0, ] # did not exit
-ex[ex$ExitStatus == 1, ] # exited
-
-wpfl[wpfl$exit_status == 1, ] # 56487 and 56471 did not exit
-wpfl[wpfl$TagID == 56471, ]
+wpfl$Detyear = as.numeric(wpfl$Detyear)
+wpfl$Sp = "wst"
 
 saveRDS(wpfl, "data_clean/model_data/wst_exits_modeldata.rds")
 
@@ -141,3 +139,9 @@ wsttales %>%
   geom_jitter(aes(color = factor(TagID)), alpha = 0.5, width = 0.1, show.legend = FALSE) +
   facet_wrap(~TagID, scales = "free") +
   theme_bw()
+
+
+wpfl %>% 
+  filter(Detyear == 2011) %>% 
+  group_by(TagID) %>% 
+  summarise(exitss = len(exit_status)) 

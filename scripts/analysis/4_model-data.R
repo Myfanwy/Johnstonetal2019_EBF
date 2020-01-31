@@ -1,7 +1,6 @@
 #-------------------------------------------------------#
 # model script
 library(rstan)
-library(ggplot2)
 options(digits = 3)
 
 #--------------------------------------------#
@@ -41,25 +40,5 @@ data = list(N = nrow(exits),
 
 fit = sampling(mod, data)
 saveRDS(fit, "results/fit.rds")
-#--------------------------------------------#
-# Working with the output from the Stan model
-samples = as.data.frame(fit)
 
-base_probs = samples[,grep("base_prob", colnames(samples))]
-colnames(base_probs) = levels(exits$exit_status)
-sapply(base_probs, quantile, p = c(0.025, 0.5, 0.975))
-
-bchn_probs = samples[,grep("Bchn_prob", colnames(samples))]
-colnames(bchn_probs) = levels(exits$exit_status)
-sapply(bchn_probs, quantile, p = c(0.025, 0.5, 0.975))
-
-# compare to observed proportions
-table(exits$exit_status, exits$Bchn) / nrow(exits)
-
-# Diff between sp
-quantile(base_probs$`2` - bchn_probs$`2`, p = c(0.025, 0.5, 0.975))
-
-#--------------------------------------------#
-#--------------------------------------------#
-#--------------------------------------------#
-
+#-------------------------------------------------------#

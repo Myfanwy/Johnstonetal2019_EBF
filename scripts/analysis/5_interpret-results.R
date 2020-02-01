@@ -21,6 +21,10 @@ bchn_probs = samples[,grep("Bchn_prob", colnames(samples))]
 colnames(bchn_probs) = c("did_not_exit", "exited", "confirmed_shed")
 sapply(bchn_probs, quantile, p = c(0.025, 0.5, 0.975))
 
+#--------------------------------------------#
+betas_probs = samples[, grep("beta[*,2]", colnames(samples))] # how to extract effects on category 2?
+sapply(betas_probs, quantile, p = c(0.025, 0.5, 0.975))
+
 # compare to observed proportions
 table(exits$exit_status, exits$Bchn) / nrow(exits)
 
@@ -30,6 +34,8 @@ quantile(base_probs$exited - bchn_probs$exited, p = c(0.025, 0.5, 0.975))
 #--------------------------------------------#
 #--------------------------------------------#
 #--------------------------------------------#
+library(dplyr)
+library(ggplot2)
 
 base_probs %>% 
   tidyr::gather(key = "exit_status", value = "value") %>% 
@@ -40,3 +46,5 @@ bchn_probs %>%
   tidyr::gather(key = "exit_status", value = "value") %>% 
   ggplot(aes(x = value)) +
   geom_density(aes(group = exit_status, color = exit_status))
+
+table(exits$exit_status, exits$Sp)

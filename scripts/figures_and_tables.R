@@ -6,10 +6,10 @@ source("scripts/setup.R")
 options(digits = 4)
 
 
-fca_tags %>% 
+chn_tags %>% 
   filter(!(TagID %in% c(31570, 13720 ,13723))) %>% # late-fall fish; exclude
   left_join(., select(alltags, TagID, TagGroup), by = "TagID") %>% 
-  filter(TagGroup != "fca_2012") %>% 
+  filter(TagGroup != "fca_2012", TagGroup != "fca_2018") %>% 
   group_by(TagGroup) %>% 
   summarise(nfish = len(TagID),
             fl_low = min(FL),
@@ -23,6 +23,7 @@ fca_tags %>%
 
 wst_tags %>% 
   group_by(TagGroup) %>% 
+    left_join(., select(alltags, TagID, TagGroup, FL, Sex), by = "TagID") %>% 
   summarise(nfish = len(TagID),
             fl_low = min(FL),
             fl_hi = max(FL),
@@ -34,9 +35,9 @@ wst_tags %>%
             ) 
 
 
-source("scripts/functions/FirstLast.R")
-
-chn_rs <- fishpaths(chn, chn$TagID, chn$Station)
+source("scripts/functions/munging_fxns.R")
+library(tagtales)
+chn_rs <- tag_tales(chn_dets, chn_dets$TagID, chn_dets$GroupedStn, "DateTimePST")
 
 chn_rs <- chn_rs %>% 
   group_by(TagID) %>% 
@@ -47,15 +48,17 @@ chn_rs <- chn_rs %>%
   ungroup() %>% 
   arrange(TagID, arrival)
 
-summary(chn_rs)
+summary(chn_rs$residence) # median residence = ~25 days
 
 # number of returning fish per year
 
-wst_exits <- readRDS("data/wst_exits_final.rds")
-wst_exits %>% 
-  group_by(Detyear) %>% 
-  summarise(nreturn = len(TagID),
-            nexits = sum(ExitStatus))
+wst_exits <- readRDS("data_clean/model_data/wst_exits_modeldata.rds")
+table(wst_exits$Detyear)
+table(wst_exits$Detyear, wst_exits$exit_status)
+
+chn_exits <- readRDS("data_clean/model_data/chn_exits_modeldata.rds")
+table(chn_exits$Detyear)
+table(chn_exits$Detyear, chn_exits$exit_status)
 
 # number of fish detected at Putah Creek Spawning
 

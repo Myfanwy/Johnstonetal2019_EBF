@@ -88,8 +88,7 @@ ii = plot_fdas(dets7, mm, tagids_subset = fds_tagids[49:50])
 )
 #--------------------------------------------#
 
-library(gridExtra)
-plots <- do.call(marrangeGrob, args = list(grobs = p, ncol=1, nrow=1))
+plots <- do.call(gridExtra::marrangeGrob, args = list(grobs = p, ncol=1, nrow=1))
 ggsave("figures/false_det_screen.pdf", plots, width=11, height=8.5)
 
 # After visually checking spatiotemporal history of each fish, tags with likely true false detections to discard:
@@ -99,7 +98,7 @@ mm <- anti_join(mm, keep56494)
 
 # Notes on detection histories:
 #--------------------------------------------#
-# false or shed: 13728 (chn, 2015), 23053 (chn, 2013)
+# false, mortality, or shed: 13728 (chn, 2015), 23053 (chn, 2013)
 # Possible overtopping: 46644 - discarded for now, but would be good to check
 # Just plain weird: 56473, 56492
 # good story of returns: 56477, 56486

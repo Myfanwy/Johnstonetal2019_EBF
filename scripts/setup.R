@@ -25,11 +25,11 @@ ybrecs = stations[!(stations %in% exitstations)]
 # late-fall TagIDs to be excluded:
 latefalls <- c(31570, 13720, 13723)
 
-dets9 = readRDS("data_clean/detection_data/1_all_detections.rds") # output of scripts/analysis/1_munge-raw-data.r ; false detection shave been removed, yb has been joined with BARD, but sheds/mortalities have not been identified or truncated.
+dets9 = readRDS("data_clean/detection_data/1_all_detections.rds") # output of scripts/analysis/1_munge-raw-data.r ; false detection shave been removed, yb has been joined with BARD
 
 # TAGS
 alltags = readRDS("data_raw/tag_data_raw/alltags_raw.rds") # all tags
-chntags = readRDS("data_raw/tag_data_raw/chn_tags_raw.rds") # chinook tags
+chn_tags = readRDS("data_raw/tag_data_raw/chn_tags_raw.rds") # chinook tags
 wst_tags = readxl::read_excel("data_raw/tag_data_raw/WhiteSturgeon_tags.xlsx", na="") %>% 
   select(DateTagged, TagID, CodeSpace, EstTagLife_days, TagGroup)
 wst_tags = add_tag_end_col(wst_tags)

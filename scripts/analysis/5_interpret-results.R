@@ -12,55 +12,34 @@ exits$Bchn <- ifelse(exits$Sp == "chn", 1, 0)
 
 samples = as.data.frame(fit)
 
+# White Sturgeon
 base_probs = samples[,grep("base_prob", colnames(samples))]
-
 colnames(base_probs) = c("did_not_exit", "exited", "confirmed_shed")
 sapply(base_probs, quantile, p = c(0.025, 0.5, 0.975))
 
+# Chinook Salmon
 bchn_probs = samples[,grep("Bchn_prob", colnames(samples))]
 colnames(bchn_probs) = c("did_not_exit", "exited", "confirmed_shed")
 sapply(bchn_probs, quantile, p = c(0.025, 0.5, 0.975))
 
-#--------------------------------------------#
-i = c(
-  "beta_year[1,2]"  ,
-  "beta_year[2,2]"  ,
-  "beta_year[3,2]"  ,
-  "beta_year[4,2]"  ,
-  "beta_year[5,2]"  ,
-  "beta_year[6,2]"  ,
-  "beta_year[7,2]"
-)
+# Diff between Spp.
+quantile(base_probs$exited - bchn_probs$exited, p = c(0.025, 0.5, 0.975))
 
-betas_probs = samples[,i]
-write.csv(sapply(betas_probs, quantile, p = c(0.025, 0.5, 0.975)), row.names = FALSE, "results/betas_probs.csv")
-
-# effect of being a wst on p(exit):
-quantile(samples$`beta[1,2]`, p = c(0.025, 0.5, 0.975))
-
-# effect of being a chn on p(exit):
-quantile(samples$`beta[2,2]`, p = c(0.025, 0.5, 0.975))
-
+# by-detyear proportion of Chn exits:
 table(exits$exit_status[exits$Bchn == 1], exits$Detyear[exits$Bchn == 1])
 prop_cat1 = c(0.10, 0.31, 0.33, 0.18, 0.36)
 
-# Diff between sp
-quantile(base_probs$exited - bchn_probs$exited, p = c(0.025, 0.5, 0.975))
-quantile(samples$`beta[2,2]` - samples$`beta[1,2]`, p = c(0.025, 0.5, 0.975))
-
 #--------------------------------------------#
 #--------------------------------------------#
 #--------------------------------------------#
+# Visualize results
 library(ggplot2)
 
 # plotting marginal distributions: (FIGURE 2)
 post = data.frame(cbind(wst = base_probs$exited, chn = bchn_probs$exited))
 post2 <- tidyr::gather(post, key = "parameter", value = "value")
-head(post2)
 
-quantile(post$chn, p = c(0.025, 0.975))
-
-  ggplot(post2) +
+ggplot(post2) +
   geom_density(aes(x = value, 
                    fill = parameter, 
                    group = parameter), 

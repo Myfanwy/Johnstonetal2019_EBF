@@ -43,3 +43,24 @@ fit = sampling(mod, data)
 saveRDS(fit, "results/fit.rds")
 
 #-------------------------------------------------------#
+
+#---------------------------------------------#
+# check year:sp interaction: random effects on detection year:sp
+if(FALSE){
+mod = stan_model("stan_models/categorical.stan", save_dso = FALSE)
+
+x = model.matrix(~ Bchn, exits)
+detYear = model.matrix(~ factor(Detyear):Bchn - 1, exits)
+data = list(N = nrow(exits),
+            K = length(unique(exits$exit_status)),
+            D = ncol(x),
+            y = as.integer(factor(exits$exit_status)),
+            x = x,
+            M = ncol(detYear),
+            detYear = detYear)
+
+set.seed(1234)
+fit2 = sampling(mod, data)
+saveRDS(fit2, "results/interaction_fit.rds")
+}
+#-------------------------------------------------------#

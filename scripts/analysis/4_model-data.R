@@ -34,7 +34,7 @@ fit = sampling(mod, data)
 saveRDS(fit, "results/fit.rds")
 
 #-------------------------------------------------------#
-
+# Candidate Models
 #---------------------------------------------#
 # check year:sp interaction: random effects on detection year:sp; this model was only written/fit to verify that year effects did not contribute consistent explanatory power to the variance in proportion of Chinook salmon exiting from year to year
 if(FALSE){mod = stan_model("stan_models/categorical.stan", save_dso = FALSE)
@@ -54,3 +54,21 @@ fit2 = sampling(mod, data)
 saveRDS(fit2, "results/interaction_fit.rds")
 }
 #-------------------------------------------------------#
+# Random effects on TagID
+#--------------------------------------------#
+mod = stan_model("stan_models/categorical.stan")
+
+x = model.matrix(~ Bchn, exits)
+detYear = model.matrix(~ factor(Detyear) + factor(TagID) - 1, exits)
+
+data = list(N = nrow(exits),
+            K = length(unique(exits$exit_status)),
+            D = ncol(x),
+            y = as.integer(factor(exits$exit_status)),
+            x = x,
+            M = ncol(detYear),
+            detYear = detYear)
+
+
+fit = sampling(mod, data, seed = 1234)
+saveRDS(fit, "results/TagID_fit.rds")

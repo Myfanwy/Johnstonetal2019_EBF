@@ -61,9 +61,10 @@ table(chn_exits$Detyear)
 table(chn_exits$Detyear, chn_exits$exit_status)
 
 # number of fish detected at Putah Creek Spawning
-
-chn %>% 
-  filter(Station == "PutahCrk_spawn") %>% 
+dets9 <- get_det_year(dets9, "DateTimePST")
+dets9 %>% 
+  filter(GroupedStn == "PCSG") %>% 
+  group_by(Detyear) %>% 
   summarise(nfish = len(TagID),
             mindate = min(DateTimePST),
             maxdate = max(DateTimePST))

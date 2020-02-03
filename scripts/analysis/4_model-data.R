@@ -38,6 +38,7 @@ data = list(N = nrow(exits),
             M = ncol(detYear),
             detYear = detYear)
 
+set.seed(1234)
 fit = sampling(mod, data)
 saveRDS(fit, "results/fit.rds")
 

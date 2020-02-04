@@ -70,5 +70,5 @@ data = list(N = nrow(exits),
             detYear = detYear)
 
 
-fit = sampling(mod, data, seed = 1234)
+fit2 = sampling(mod, data, seed = 1234)
 saveRDS(fit, "results/TagID_fit.rds")

@@ -3,7 +3,20 @@
 # Working with the output from the Stan model
 # Mon Jan 27 21:39:25 2020 ------------------------------
 
+#
+#--------------------------------------------#
+## Compare models
+library(loo)
+mods = sapply(list.files("results", pattern = "rds", full.names = TRUE), readRDS,
+              simplify = FALSE)
+loos = lapply(mods, function(x) loo(extract_log_lik(x)))
+loo_compare(loos[[1]], loos[[2]], loos[[3]])
+names(mods)
+
+#--------------------------------------------#
+
 fit = readRDS("results/fit.rds")
+
 wst_exits <- readRDS("data_clean/model_data/wst_exits_modeldata.rds")
 chn_exits <- readRDS("data_clean/model_data/chn_exits_modeldata.rds")
 exits = dplyr::bind_rows(wst_exits, chn_exits)

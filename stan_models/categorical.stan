@@ -40,6 +40,8 @@ model {
 generated quantities{
   vector[K] base_probs = softmax(to_vector(beta[1,]));
   vector[K] Bchn_probs = softmax(to_vector(beta[1,] + beta[2,]));
-  
-  
+  vector[N] log_lik;
+
+  for(n in 1:N)
+	log_lik[n] = categorical_logit_lpmf(y[n] | to_vector(x[n] * beta + detYear[n] * beta_year));
 }

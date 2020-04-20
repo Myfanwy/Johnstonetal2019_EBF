@@ -48,7 +48,7 @@ wst_dets = rm_post_tag_end_dets(wst_dets)  # removed the 68 dets from Tag 2860
 #--------------------------------------------#
 # chn detections
 chn_dets <- dets9 %>% 
-  filter(TagID %in% chntags$TagID, !(TagID %in% latefalls)) %>% 
+  filter(TagID %in% chn_tags$TagID, !(TagID %in% latefalls)) %>% 
   arrange(TagID, DateTimePST) 
 
 

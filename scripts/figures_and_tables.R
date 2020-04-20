@@ -2,7 +2,7 @@
 # Summary stats for results section of manuscript
 #--------------------------------------------#
 
-source("scripts/setup.R")
+source("scripts/analysis/setup.R")
 options(digits = 4)
 
 
@@ -34,10 +34,10 @@ wst_tags %>%
             nunk = sum(Sex == "U")
             ) 
 
-
-source("scripts/functions/munging_fxns.R")
-library(tagtales)
-chn_rs <- tag_tales(chn_dets, chn_dets$TagID, chn_dets$GroupedStn, "DateTimePST")
+#-------------------------------------------------------#
+# CHINOOK SALMON RESIDENCE TIME
+#-------------------------------------------------------#
+chn_rs <- tagtales::tag_tales(chn_dets, chn_dets$TagID, chn_dets$GroupedStn, "DateTimePST")
 
 chn_rs <- chn_rs %>% 
   group_by(TagID) %>% 
@@ -68,17 +68,3 @@ dets9 %>%
   summarise(nfish = len(TagID),
             mindate = min(DateTimePST),
             maxdate = max(DateTimePST))
-
-# number of chn exits by year
-chn_exits_final %>% 
-  group_by(Detyear, ExitStatus) %>% 
-  tally() %>% 
-  filter(ExitStatus == 1)
-
-# residence/detection window of white sturgeon
-
-wst %>% 
-  group_by(Detyear) %>% 
-  summarise(firstdet = min(DateTimePST), loc = Station[DateTimePST == min(DateTimePST)],
-            lastdet = max(DateTimePST), loc2 = Station[DateTimePST == max(DateTimePST)])
-

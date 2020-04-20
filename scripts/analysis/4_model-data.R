@@ -5,8 +5,8 @@ options(digits = 3)
 
 #--------------------------------------------#
 # data
-wst_exits <- readRDS("data_clean/model_data/wst_exits_modeldata.rds")
-chn_exits <- readRDS("data_clean/model_data/chn_exits_modeldata.rds")
+wst_exits <- readRDS("data_clean/model_data/wst_exits_modeldata.rds") # generated in steps 0-3
+chn_exits <- readRDS("data_clean/model_data/chn_exits_modeldata.rds") # generaated in steps 0-3
 
 exits = dplyr::bind_rows(wst_exits, chn_exits)
 exits$Bchn <- ifelse(exits$Sp == "chn", 1, 0) #Bchn predictor
@@ -30,7 +30,7 @@ data = list(N = nrow(exits),
             detYear = detYear)
 
 fit = sampling(mod, data, seed = 1234)
-saveRDS(fit, "results/fit.rds")
+saveRDS(fit, "results/fit_r1.rds")
 
 #-------------------------------------------------------#
 # Candidate Models
@@ -49,7 +49,7 @@ data = list(N = nrow(exits),
             detYear = detYear)
 
 fit2 = sampling(mod, data, seed = 1234)
-saveRDS(fit2, "results/interaction_fit.rds")
+saveRDS(fit2, "results/interaction_fit_r1.rds")
 }
 #-------------------------------------------------------#
 # Random effects on TagID
@@ -69,4 +69,4 @@ data = list(N = nrow(exits),
 
 
 fit2 = sampling(mod, data, seed = 1234)
-saveRDS(fit, "results/TagID_fit.rds")
+saveRDS(fit, "results/TagID_fit_r1.rds")

@@ -7,18 +7,15 @@
 #--------------------------------------------#
 ## Compare models
 library(loo)
-mods = sapply(list.files("results", pattern = "rds", full.names = TRUE),
+mods = sapply(list.files("results/orig_results", pattern = "rds", full.names = TRUE),
               readRDS,
               simplify = FALSE)
-loos = lapply(mods, function(x)
-  loo(extract_log_lik(x)))
+loos = lapply(mods, function(x) loo(extract_log_lik(x)))
 loo_compare(loos[[1]], loos[[2]], loos[[3]])
-names(mods[[1]])
 
 #--------------------------------------------#
 
-fit = readRDS("results/fit.rds")
-
+fit = readRDS("results/orig_results/fit.rds")
 wst_exits <- readRDS("data_clean/model_data/wst_exits_modeldata.rds")
 chn_exits <- readRDS("data_clean/model_data/chn_exits_modeldata.rds")
 exits = dplyr::bind_rows(wst_exits, chn_exits)
@@ -42,7 +39,6 @@ quantile(base_probs$exited - bchn_probs$exited, p = c(0.025, 0.5, 0.975))
 
 # by-detyear proportion of Chn exits:
 table(exits$exit_status[exits$Bchn == 1], exits$Detyear[exits$Bchn == 1])
-prop_cat1 = c(0.10, 0.31, 0.33, 0.18, 0.36)
 
 #--------------------------------------------#
 #--------------------------------------------#
@@ -80,5 +76,5 @@ ggplot(post2) +
   )) +
   scale_x_continuous(expand = c(0.02, 0.0))
 
-ggsave("Fig2_posteriordistributions.png", height = 6, width = 10)
+#ggsave("Fig2_posteriordistributions.png", height = 6, width = 10)
 

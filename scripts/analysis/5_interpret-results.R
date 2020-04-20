@@ -7,11 +7,13 @@
 #--------------------------------------------#
 ## Compare models
 library(loo)
-mods = sapply(list.files("results", pattern = "rds", full.names = TRUE), readRDS,
+mods = sapply(list.files("results", pattern = "rds", full.names = TRUE),
+              readRDS,
               simplify = FALSE)
-loos = lapply(mods, function(x) loo(extract_log_lik(x)))
+loos = lapply(mods, function(x)
+  loo(extract_log_lik(x)))
 loo_compare(loos[[1]], loos[[2]], loos[[3]])
-names(mods)
+names(mods[[1]])
 
 #--------------------------------------------#
 

@@ -18,6 +18,7 @@
 
 source("scripts/functions/munging_fxns.R")
 source("scripts/functions/convenience_fxns.R")
+source("scripts/functions/munging_bard_fxns.R")
 stns <- readRDS("data_clean/deployment_data/stns.rds")
 
 # LOAD DATA # all raw data created in 0_query-raw-data.R
@@ -96,15 +97,6 @@ dis <- c(13728, 31563, 37835,  46644,  56473,  56483,  56492, 56494) # 56494; on
 keep56494 <- filter(mm, TagID == 56494 & DateTimePST == "2017-02-11 03:40:23")
 mm <- anti_join(mm, keep56494)
 
-# Notes on detection histories:
-#--------------------------------------------#
-# false, mortality, or shed: 13728 (chn, 2015), 23053 (chn, 2013)
-# Possible overtopping: 46644 - discarded for now, but would be good to check
-# Just plain weird: 56473, 56492
-# good story of returns: 56477, 56486
-# uneven gaps inconsistent with a shed: 2619
-# Wallace weir rescues: 37835, 37845 (both in 2015), probably 20161, and 20164 (2014)
-
 fd_discard <- filter(mm, TagID %in% dis)
 filter(fd_discard, TagID == 56494) %>% pull(DateTimePST) # good; this is the one we want to discard, not the other one
 filter(fd_discard, TagID == 13728)
@@ -122,8 +114,6 @@ dets8 = anti_join(dets8, rm56483)
 dets8 = anti_join(dets8, rm31555)
 
 bard_dets = readRDS("data_clean/bard_data/bard_dets.rds")
-
-head(bard_dets)
 
 dets9 = join_with_bard(dets_df = dets8, bard_dets_df = bard_dets)
 

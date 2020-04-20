@@ -1,33 +1,39 @@
 #-------------------------------------------------------#
-# Step 2 of analysis
+# Step 3 of analysis
 # M. Johnston
 # Fri Dec 27 13:08:02 2019 ------------------------------
 
-# goal: categorize all fish, each year, into one of three "exit" statuses:
-
-# 3) Tag shed in Bypass
-#    - occurs when a tagged fish is recovered by hand somewhere after being released, and their detection history shows their final recorded detection somewhere in the Yolo Bypass array.  This applied to three fish in the study, all recovered at Wallace Weir fyke trap and identified either by their floy tags or their fork lengths + detection histories: 
+# goal: categorize all fish, each year, into one of three "exit" statuses.  Note that these categories differ slightly from the paper (i.e. categories 1 and 2 are reversed here).
+#-------------------------------------------------------#
+# 1) Shed/Mortality/Did not Exit the Yolo Bypass
+# see paper for definition (listed as category 2).
+#
+# 2) Exited 
+# occurs when a fish's last detection location is at BCN, 
+# BCS, the base of the Toe drain, OR in the BARD array, 
+# AND that fish is not detected again within the Yolo Bypass 
+# array in the same detection year (i.e., white sturgeon 
+# have a clear final exit in a given detection year). 
+#
+# 3) Tag shed in Bypass 
+# Ocurs when a tagged fish is recovered by hand somewhere after 
+# being released, and their detection history shows their final 
+# recorded detection somewhere in the Yolo Bypass array.  This 
+# applied to three fish in the study, all recovered at Wallace 
+# Weir fyke trap and identified either by their floy tags or 
+# their fork lengths + detection histories: 
 
 known_sheds = c(37835 , # this fish was recovered in fyke and identified by its floy tag in 2015
                 20161 , # captured in WW fyke and identified by fork length/detection history consistent with capture time
                 20164  # captured in WW fyke and identified by fork length/detection history consistent with capture time
                 )
-
-# 2) Exited
-# - occurs when a fish's last detection location is at BCN, BCS, the base of the Toe drain, OR in the BARD array, AND that fish is not detected again within the Yolo Bypass array in the same detection year (i.e., white sturgeon have a clear final exit in a given detection year).  
-
-# 1) Shed/Mortality/Did not Exit the Yolo Bypass
-# - all other fish in the study fall into this category (given, if a white sturgeon, they returned to the bypass in a given year).
-
-# BEGIN
+#-------------------------------------------------------#
+# BEGIN CATEGORIZING (1) and (2) fish:
 #--------------------------------------------#
 source("scripts/setup.R") # loads detections cleaned in scripts/analysis/1_munge-raw-data.R, subsets down to wst/chn dets
 
 # White Sturgeon
-#--------------------------------------------#
-# Split into detection years, get last location in each detection year.
-#--------------------------------------------#
-
+#-------------------------------------------------------#
 # for each tagID and year, what stations were they detected at?
 wst_dets %>% 
   group_by(TagID, Detyear) %>% 
@@ -35,8 +41,6 @@ wst_dets %>%
   ungroup() %>% 
   select(TagID, Detyear, GroupedStn) %>% 
   arrange(TagID) -> yb_peryear
-
-head(yb_peryear)
 
 # split by TagID/Detyear
 syd = split(yb_peryear, list(yb_peryear$TagID, yb_peryear$Detyear))
@@ -81,20 +85,21 @@ wpfl = wfl %>%
   mutate(exit_status = ifelse(TagID %in% known_sheds, 3, exit_status)) %>% # 3 = shed tag
   ungroup()
 
-table(wpfl$exit_status) # 
 # manual assignments: we know that 56487 exited in 2013 because it's detected elsewhere in the delta in later years:
+
 wpfl$exit_status[wpfl$TagID == 56487 & wpfl$Detyear == 2013] <- 2
 
 wpfl$Detyear = as.numeric(wpfl$Detyear)
 wpfl$Sp = "wst"
 
+table(wpfl$exit_status) # 177 exits, 5 non-exits
+
 saveRDS(wpfl, "data_clean/model_data/wst_exits_modeldata.rds")
 
 #--------------------------------------------#
-# CHINOOK
+# CHINOOK SALMON
 #--------------------------------------------#
 chn_fl = first_last(chn_dets, "TagID", "DateTimePST", "GroupedStn")
-
 chnidx <- select(alltags, TagID, TagGroup, Sp) %>% 
   filter(!duplicated(TagID), Sp == "chn")
 
@@ -112,36 +117,3 @@ fl <- fl %>%
 table(fl$exit_status)
 
 saveRDS(fl, "data_clean/model_data/chn_exits_modeldata.rds")
-
-
-library(ggplot2)
-
-wpfl %>% 
-  mutate(color = case_when(TagID %in% c(2861, 2864, 2865, 2881, 56487, 56471) ~ "stranded",
-                           TRUE ~ "exited")) %>% 
-ggplot(aes(x = factor(Detyear), y = factor(exit_status))) +
-  geom_jitter(aes(color = factor(color)), alpha = 0.7, width = 0.1) +
-  theme_bw()
-
-plot_track(wst_dets, 2861)
-plot_track(wst_dets, 56487)
-
-dd = filter(wst_dets, TagID %in% c(2861, 2864, 2865, 2881, 56487, 56471))
-wsttales = tagtales::tag_tales(dd, 
-                               dd$TagID, 
-                               dd$GroupedStn, 
-                               "DateTimePST",
-                               Threshold = 60*35)
-
-wsttales %>% 
-  filter(TagID %in% c(2861, 2864, 2865, 2881, 56487, 56471)) %>% 
-  ggplot(aes(x = arrival, y = reorder(GroupedStn, rkms))) +
-  geom_jitter(aes(color = factor(TagID)), alpha = 0.5, width = 0.1, show.legend = FALSE) +
-  facet_wrap(~TagID, scales = "free") +
-  theme_bw()
-
-
-wpfl %>% 
-  filter(Detyear == 2011) %>% 
-  group_by(TagID) %>% 
-  summarise(exitss = len(exit_status)) 

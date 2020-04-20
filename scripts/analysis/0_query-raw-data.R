@@ -12,7 +12,7 @@ db = RSQLite::dbConnect(RSQLite::SQLite(), "yb_database.sqlite")
 
 #--------------------------------------------#
 
-# Chinook tagging metadata (includes RAMP data)
+# Chinook tagging metadata
 tbl(db, "chn") %>% collect() %>% saveRDS("data_raw/tag_data_raw/chn_tags_raw.rds")
 
 # All tagging metadata (including both wst and chinook)

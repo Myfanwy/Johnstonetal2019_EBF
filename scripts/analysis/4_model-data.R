@@ -29,8 +29,7 @@ data = list(N = nrow(exits),
             M = ncol(detYear),
             detYear = detYear)
 
-set.seed(1234)
-fit = sampling(mod, data)
+fit = sampling(mod, data, seed = 1234)
 saveRDS(fit, "results/fit.rds")
 
 #-------------------------------------------------------#
@@ -49,8 +48,7 @@ data = list(N = nrow(exits),
             M = ncol(detYear),
             detYear = detYear)
 
-set.seed(1234)
-fit2 = sampling(mod, data)
+fit2 = sampling(mod, data, seed = 1234)
 saveRDS(fit2, "results/interaction_fit.rds")
 }
 #-------------------------------------------------------#

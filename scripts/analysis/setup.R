@@ -1,11 +1,13 @@
 #--------------------------------------------#
-# setup
-#--------------------------------------------#
+# M. Johnston
+# setup analysis - this gets called by a few different scripts at different points
+# Mon Apr 20 14:44:45 2020 ------------------------------
+
 library(dplyr)
 library(ggplot2)
 library(lubridate)
-# if(require(tagtales))
-#   devtools::install_github("Myfanwy/tagtales")
+if(require(tagtales))
+  devtools::install_github("Myfanwy/tagtales")
 library(tagtales)
 source("scripts/functions/munging_fxns.R")
 source("scripts/functions/categorizing_exits_functions.R")

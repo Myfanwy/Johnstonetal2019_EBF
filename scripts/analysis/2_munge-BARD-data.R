@@ -30,4 +30,8 @@ bard_dets = rm_redundant_yb_dets(bard_dets) #rm ~281K dets
 bard_dets = BARD_fix_NULL_values(bard_dets)
 bard_dets = BARD_group_stns_AND_rm_simuls(bard_dets) # ~2.5 million dets remaining
 #--------------------------------------------#
-saveRDS(bard_dets, "data_clean/bard_data/bard_dets.rds")
+# saveRDS(bard_dets, "data_clean/bard_data/bard_dets.rds")
+
+# Join with dets 8, detection data cleaned in analysis step 1 (1_munge-raw-data.R):
+dets8 = readRDS("data_clean/detection_data/1_all_detections.rds")
+dets9 = join_with_bard(dets_df = dets8, bard_dets_df = bard_dets)

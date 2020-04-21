@@ -3,7 +3,7 @@
 # Myfanwy Johnston
 # Wed Dec 18 11:26:08 2019 ------------------------------
 
-# This shows how the original .sqlite database (not included in this repo) was queried.  The results of this query are saved to data_raw/ and munged in scripts/analysis/1_munge-detection-data.R.
+# This shows how the original .sqlite database (not included in this repo) was queried.  The results of this query are saved to data_raw/ and wrangled/cleaned in scripts/analysis/1_munge-detection-data.R.
 
 library(dplyr)
 

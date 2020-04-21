@@ -92,15 +92,12 @@ ii = plot_fdas(dets7, mm, tagids_subset = fds_tagids[49:50])
 plots <- do.call(gridExtra::marrangeGrob, args = list(grobs = p, ncol=1, nrow=1))
 ggsave("figures/false_det_screen.pdf", plots, width=11, height=8.5)
 
-# After visually checking spatiotemporal history of each fish, tags with likely true false detections to discard:
+# After visually checking spatiotemporal history of each fish, tags with likely false detections to discard:
 dis <- c(13728, 31563, 37835,  46644,  56473,  56483,  56492, 56494) # 56494; only discard the 2013 detection
 keep56494 <- filter(mm, TagID == 56494 & DateTimePST == "2017-02-11 03:40:23")
 mm <- anti_join(mm, keep56494)
 
 fd_discard <- filter(mm, TagID %in% dis)
-filter(fd_discard, TagID == 56494) %>% pull(DateTimePST) # good; this is the one we want to discard, not the other one
-filter(fd_discard, TagID == 13728)
-filter(fd_discard, TagID == 56483)
 
 # Remove false detections from dets7 with an anti-join; should remove 12 dets from 9 fish
 filter(dets7, TagID == 56483, Station == "YBBLR") # there's actually 2 false dets; VUE didn't catch one of them
@@ -110,11 +107,8 @@ dets8 <- anti_join(dets7, fd_discard[,c("TagID","Receiver","DateTimePST")])
 rm56483 <- filter(dets8, TagID == 56483, Station == "YBBLR")
 rm31555 <- filter(dets8, TagID == 31555, DateTimePST > as.Date("2015-01-01")) # different codespace tag
 
+# remove from detections:
 dets8 = anti_join(dets8, rm56483)
 dets8 = anti_join(dets8, rm31555)
 
-bard_dets = readRDS("data_clean/bard_data/bard_dets.rds")
-
-dets9 = join_with_bard(dets_df = dets8, bard_dets_df = bard_dets)
-
-saveRDS(dets9, "data_clean/detection_data/1_all_detections.rds")
+saveRDS(dets8, "data_clean/detection_data/1_all_detections.rds")

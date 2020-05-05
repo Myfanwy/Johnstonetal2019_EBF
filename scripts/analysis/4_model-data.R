@@ -30,6 +30,10 @@ data = list(N = nrow(exits),
             detYear = detYear)
 
 fit = sampling(mod, data, seed = 1234)
+
+if(!dir.exists("results"))
+    dir.create("results")
+
 saveRDS(fit, "results/fit_r1.rds")
 
 #-------------------------------------------------------#

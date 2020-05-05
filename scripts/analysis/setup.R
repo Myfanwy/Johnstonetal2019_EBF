@@ -6,8 +6,8 @@
 library(dplyr)
 library(ggplot2)
 library(lubridate)
-if(require(tagtales))
-  devtools::install_github("Myfanwy/tagtales")
+# if(require(tagtales))
+#   devtools::install_github("Myfanwy/tagtales") # uncomment to install
 library(tagtales)
 source("scripts/functions/munging_fxns.R")
 source("scripts/functions/categorizing_exits_functions.R")
@@ -27,7 +27,7 @@ ybrecs = stations[!(stations %in% exitstations)]
 # late-fall TagIDs to be excluded:
 latefalls <- c(31570, 13720, 13723)
 
-dets9 = readRDS("data_clean/detection_data/1_all_detections.rds") # output of scripts/analysis/1_munge-raw-data.r ; false detection shave been removed, yb has been joined with BARD
+dets9 = readRDS("data_clean/detection_data/2_all_detections.rds") # output of scripts/analysis/2_munge-BARD-data.r ; false detection shave been removed, yb has been joined with BARD
 
 # TAGS
 alltags = readRDS("data_raw/tag_data_raw/alltags_raw.rds") # all tags

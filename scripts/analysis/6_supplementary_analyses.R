@@ -6,7 +6,7 @@
 library(dplyr)
 library(ggplot2)
 # DATA and functions
-dat = readRDS("data_clean/detection_data/1_all_detections.rds")
+dat = readRDS("data_clean/detection_data/2_all_detections.rds")
 ctags = readRDS("data_raw/tag_data_raw/chn_tags_raw.rds")
 cexits = readRDS("data_clean/model_data/chn_exits_modeldata.rds")
 source("scripts/functions/munging_fxns.R")

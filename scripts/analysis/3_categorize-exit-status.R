@@ -30,7 +30,7 @@ known_sheds = c(37835 , # this fish was recovered in fyke and identified by its 
 #-------------------------------------------------------#
 # BEGIN CATEGORIZING (1) and (2) fish:
 #--------------------------------------------#
-source("scripts/setup.R") # loads detections cleaned in scripts/analysis/1_munge-raw-data.R, subsets down to wst/chn dets
+source("scripts/analysis/setup.R") # loads detections cleaned in scripts/analysis/1_munge-raw-data.R, subsets down to wst/chn dets
 
 # White Sturgeon
 #-------------------------------------------------------#

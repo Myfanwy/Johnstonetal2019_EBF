@@ -111,4 +111,4 @@ rm31555 <- filter(dets8, TagID == 31555, DateTimePST > as.Date("2015-01-01")) # 
 dets8 = anti_join(dets8, rm56483)
 dets8 = anti_join(dets8, rm31555)
 
-saveRDS(dets8, "data_clean/detection_data/1_all_detections.rds")
+saveRDS(dets8, "data_clean/detection_data/1_yb_detections.rds")

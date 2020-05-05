@@ -93,6 +93,8 @@ wpfl$Detyear = as.numeric(wpfl$Detyear)
 wpfl$Sp = "wst"
 
 table(wpfl$exit_status) # 177 exits, 5 non-exits
+if(!dir.exists("data_clean/model_data"))
+    dir.create("data_clean/model_data")
 
 saveRDS(wpfl, "data_clean/model_data/wst_exits_modeldata.rds")
 

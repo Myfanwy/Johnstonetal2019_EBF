@@ -90,6 +90,9 @@ ii = plot_fdas(dets7, mm, tagids_subset = fds_tagids[49:50])
 #--------------------------------------------#
 
 plots <- do.call(gridExtra::marrangeGrob, args = list(grobs = p, ncol=1, nrow=1))
+if(!dir.exists("figures"))
+    dir.create("figures")
+
 ggsave("figures/false_det_screen.pdf", plots, width=11, height=8.5)
 
 # After visually checking spatiotemporal history of each fish, tags with likely false detections to discard:

@@ -62,3 +62,42 @@ rm_post_tag_end_dets <- function(dets_df){
   return(dets_dff)
   
 }
+
+#-------------------------------------------------------#
+# from tagtales package
+#-------------------------------------------------------#
+
+first_last <- function(detdf, 
+                       tagidcol = "TagID", 
+                       datetimecol = "DateTimeUTC", 
+                       stationcol = "Station") {
+
+  f1 <- split(detdf, detdf[[tagidcol]])
+  tmp <- lapply(f1, first_last_1fish, dtc2 = datetimecol, stnc2 = stationcol, tagc = tagidcol)
+  fldf = do.call(rbind, tmp)
+                 
+  return(fldf) }
+
+
+first_last_1fish <- function(x, 
+                             dtc2 = datetimecol, 
+                             tagc = tagidcol,
+                             stnc2 = stationcol) {
+
+     x = x[order(x[[dtc2]]), ] # order by DateTime
+
+     return(data.frame(
+
+       TagID = as.numeric(unique(x[[tagc]])),
+
+       first_det = min(x[[dtc2]]),
+
+       first_stn = x[[stnc2]][x[[dtc2]] == min(x[[dtc2]])],
+
+       last_det = max(x[[dtc2]]),
+
+       last_stn = x[[stnc2]][x[[dtc2]] == max(x[[dtc2]])],
+
+       stringsAsFactors = FALSE)
+     )
+}

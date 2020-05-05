@@ -40,7 +40,7 @@ saveRDS(fit, "results/fit_r1.rds")
 # Candidate Models
 #---------------------------------------------#
 # check year:sp interaction: random effects on detection year:sp; this model was only written/fit to verify that year effects did not contribute consistent explanatory power to the variance in proportion of Chinook salmon exiting from year to year
-if(FALSE){mod = stan_model("stan_models/categorical.stan", save_dso = FALSE)
+mod = stan_model("stan_models/categorical.stan", save_dso = FALSE)
 
 x = model.matrix(~ Bchn, exits)
 detYear = model.matrix(~ factor(Detyear):Bchn - 1, exits)
@@ -54,7 +54,7 @@ data = list(N = nrow(exits),
 
 fit2 = sampling(mod, data, seed = 1234)
 saveRDS(fit2, "results/interaction_fit_r1.rds")
-}
+
 #-------------------------------------------------------#
 # Random effects on TagID
 #--------------------------------------------#

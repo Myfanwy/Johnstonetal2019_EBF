@@ -11,11 +11,11 @@ mods = sapply(list.files("results", pattern = "rds", full.names = TRUE),
               readRDS,
               simplify = FALSE)
 loos = lapply(mods, function(x) loo(extract_log_lik(x)))
-loo_compare(loos[[1]], loos[[2]], loos[[3]])
+loo_compare(loos[[1]], loos[[2]])
 
 #--------------------------------------------#
 
-fit = readRDS("results/fit.rds")
+fit = readRDS("results/fit_r1.rds")
 wst_exits <- readRDS("data_clean/model_data/wst_exits_modeldata.rds")
 chn_exits <- readRDS("data_clean/model_data/chn_exits_modeldata.rds")
 exits = dplyr::bind_rows(wst_exits, chn_exits)
@@ -64,17 +64,14 @@ ggplot(post2) +
   geom_rug(aes(x = value), alpha = 0.5) +
   fishpals::theme_pub() +
   theme(legend.key = element_rect(size = 20, fill = "white"),
-        legend.position = c(0.35, 0.85),
+        legend.position = c(0.45, 0.85),
         legend.direction = "horizontal",
         legend.key.height = unit(1, "cm"),
         legend.key.width = unit(1, "cm"),
         legend.spacing.y = unit(1, "cm"),
-        legend.text = element_text(size = 15),
+        legend.text = element_text(size = 12),
         axis.text = element_text(size = 12),
         axis.title = element_text(size = 13)) +
   guides(fill = guide_legend(title = NULL
   )) +
   scale_x_continuous(expand = c(0.02, 0.0))
-
-#ggsave("Fig2_posteriordistributions.png", height = 6, width = 10)
-

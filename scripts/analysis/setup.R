@@ -6,9 +6,6 @@
 library(dplyr)
 library(ggplot2)
 library(lubridate)
-# if(require(tagtales))
-#   devtools::install_github("Myfanwy/tagtales") # uncomment to install
-library(tagtales)
 source("scripts/functions/munging_fxns.R")
 source("scripts/functions/categorizing_exits_functions.R")
 source("scripts/functions/convenience_fxns.R")
